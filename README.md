@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# نُلِم
+
+مستشار قبول جامعي ذكي مبني بـ Next.js. الواجهة عربية، وتستخدم API داخلي يعتمد أساساً على حساب محلي من بيانات الجامعات، مع إمكانية اختيارية لتحسين الصياغة عبر Gemini.
 
 ## Getting Started
 
-First, run the development server:
+ثبت الحزم وشغل بيئة التطوير:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+افتح [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+انسخ `.env.example` إلى `.env.local` محلياً، وأضف القيم المطلوبة:
 
-## Learn More
+```bash
+cp .env.example .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+Gemini اختياري، والوضع الافتراضي لا يستهلك API:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+GEMINI_RESPONSE_MODE=off
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash-lite
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+لتفعيل صياغة Gemini لكل الردود، استخدم `GEMINI_RESPONSE_MODE=always`. يمكن أيضاً تفعيله لطلب واحد فقط بإرسال `enhanceWithGemini: true` إلى `/api/chat`.
 
-## Deploy on Vercel
+## Production Check
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+قبل النشر شغل:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run check
+```
+
+## Admission Data
+
+مصدر البيانات الأساسي للتوصيات والحساب هو `data/final_output.json`. أما `trainedData.md` في جذر المشروع أو المجلد الأعلى فيستخدم كمصدر معرفة نصية إضافي فقط، ولا يستبدل بيانات JSON المهيكلة.
+
+مصدر بيانات القبول هو ملفات PDF الموجودة في مجلد `../pdfs`.
+
+لإعادة استخراج النصوص وتحديث بيانات التطبيق:
+
+```bash
+npm run extract:admissions
+```
+
+ينتج السكربت:
+
+- `trainedData.md`: مصدر معرفة نصية إضافي للمحادثة عند وجوده في جذر المشروع أو المجلد الأعلى.
+- `public/data/final_output.json`: نسخة JSON محلية للبيانات المهيكلة.
+- `data/final_output.json`: مصدر احتياطي يستخدمه كود `lib/` وواجهة المحادثة عند عدم توفر `trainedData.md`.
+- `data/extraction_report.json`: تقرير جودة الاستخراج لكل PDF.
+- `../txt/*.txt`: نصوص وسيطة للمراجعة.
+
+ملاحظة: بعض ملفات PDF تكون صورًا بدون نص قابل للقراءة. سيضع التقرير حالتها كـ `existing_txt_fallback_needs_ocr` أو `poor_pdf_text_needs_ocr`، وهذه تحتاج OCR عربي قبل الاعتماد الكامل عليها.
+
+## Deploy
+
+أفضل استضافة لهذا المشروع هي Vercel لأنها تدعم Next.js API Routes مباشرة.
+
+1. ارفع مجلد المشروع `nulim` إلى GitHub.
+2. في Vercel اختر Import Project.
+3. أضف Environment Variables الموجودة في `.env.example`، وأهمها `GEMINI_API_KEY`.
+4. إعدادات البناء:
+   - Framework Preset: `Next.js`
+   - Install Command: `npm install`
+   - Build Command: `npm run build`
+   - Output Directory: اتركها فارغة
+5. اضغط Deploy.
+
+للتشغيل على سيرفر Node:
+
+```bash
+npm install
+npm run build
+npm run start
+```
