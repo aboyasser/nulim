@@ -12889,6 +12889,44 @@
   },
   {
     "university_info": {
+      "id": "NAMI",
+      "name": "الأكاديمية الوطنية للصناعات العسكرية",
+      "short_name": "أكاديمية SAMI",
+      "website": "adi.edu.sa",
+      "city_or_branch": "الرياض",
+      "institution_type": "training_employment",
+      "general_formulas": [
+        {
+          "type": "custom",
+          "details": "اجتياز اختبار القدرات + اجتياز اختبار STEP (كفايات اللغة الإنجليزية)"
+        }
+      ],
+      "program_notes": "البرنامج مبتدئ بالتوظيف: يوقع المتدرب/المتدربة عقد العمل عند القبول وقبل بدء التدريب، ويحصل على مكافأة شهرية طوال فترة التدريب البالغة 27 شهراً. لغة التدريب الإنجليزية. التقديم إلكتروني بالكامل عبر بوابة الأكاديمية."
+    },
+    "programs_statistics": {
+      "total_programs_found": 1
+    },
+    "programs": [
+      {
+        "college": "الأكاديمية الوطنية للصناعات العسكرية",
+        "name": "برنامج التدريب المبتدئ بالتوظيف",
+        "gender": "both",
+        "city_or_campus": "الرياض",
+        "training_duration_months": 27,
+        "training_language": "الإنجليزية",
+        "weekly_hours": 30,
+        "semesters_per_year": 3,
+        "admission_criteria": {
+          "score_type": "custom",
+          "min_score_limit": null,
+          "formula_details": "اجتياز اختبار القدرات + اجتياز اختبار STEP (كفايات اللغة الإنجليزية)"
+        },
+        "additional_conditions": "أن يكون المتقدم/المتقدمة سعودي/سعودية الجنسية، حاصلاً على شهادة الثانوية العامة، اجتياز الفحص الطبي والمسح الأمني. التقديم إلكتروني عبر بوابة الأكاديمية على موقع adi.edu.sa"
+      }
+    ]
+  },
+  {
+    "university_info": {
       "id": "MOD",
       "name": "وزارة الدفاع (الكليات العسكرية)",
       "city_or_branch": "الرياض",

@@ -5,6 +5,10 @@ import {
   type ProgramItem,
   type UniversityItem,
 } from "@/lib/data-source";
+import {
+  normalizeArabic,
+  parseGender,
+} from "@/lib/utils";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -175,25 +179,10 @@ function calculateEquivalent({ secondary = 0, qiyas = 0 }: ParsedScores) {
   return Number(((secondary * 0.5) + (qiyas * 0.5)).toFixed(2));
 }
 
-function parseGender(text: string, profile?: UserProfile): "male" | "female" | undefined {
-  const normalized = normalizeArabic(text);
-
-  // نفحص النص أولاً — الأولوية للكلمات الصريحة في الرسالة
-  // نجعل "ال" التعريف اختيارية لأن المدخل قد يكون "البنات" أو "الطالبات"
-  if (/(^|\s)(ال)?(طالبه|طالبة|بنت|بنات|انثى|اناث|انثه)(\s|$)/.test(normalized)) {
-    return "female";
-  }
-  if (/(^|\s)(ال)?(طالب|ولد|اولاد|ذكر|ذكور)(\s|$)/.test(normalized) &&
-      !/(طالبه|طالبه|طالبات)/.test(normalized)) {
-    return "male";
-  }
-
-  // لا يوجد تصريح في النص — نعتمد على الـ profile كاحتياطي
-  if (profile?.gender === "male") return "male";
-  if (profile?.gender === "female") return "female";
-
-  return undefined;
-}
+// re-export parseGender from utils for backward compat
+export { parseGender } from "@/lib/utils";
+// re-export normalizeArabic for backward compat
+export { normalizeArabic } from "@/lib/utils";
 
 function parseDegree(text: string) {
   const normalized = normalizeArabic(text);
@@ -276,17 +265,7 @@ function calculateScoreForFormula(
   return equivalent ?? weighted;
 }
 
-function normalizeArabic(text: string) {
-  return text
-    .normalize("NFKD")
-    .replace(/[\u064B-\u065F\u0670]/g, "")
-    .replace(/[إأآ]/g, "ا")
-    .replace(/ة/g, "ه")
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
+// normalizeArabic is now imported from @/lib/utils
 
 function extractInterest(text: string) {
   const normalized = normalizeArabic(text);
@@ -676,7 +655,7 @@ export function buildAdvisorSummary(
   const scores = parseScores(latestUserMessage);
   const weighted = calculateWeighted(scores);
   const equivalent = calculateEquivalent(scores);
-  const requestedGender = parseGender(latestUserMessage, profile);
+  const requestedGender = parseGender(latestUserMessage, profile?.gender);
   const requestedDegree = parseDegree(latestUserMessage);
   const requestedLocation = parseRequestedLocation(latestUserMessage);
   const requestedCount = parseRequestedCount(latestUserMessage);

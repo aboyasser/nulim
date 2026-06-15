@@ -1,25 +1,31 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
-const UNIVERSITIES = [
-  'جامعة الملك سعود',
-  'جامعة الملك عبدالعزيز',
-  'جامعة الإمام محمد بن سعود الإسلامية',
-  'جامعة الأميرة نورة بنت عبدالرحمن',
-  'جامعة الملك خالد',
-  'جامعة الطائف',
-  'جامعة القصيم',
-  'جامعة المجمعة',
-  'جامعة تبوك',
-  'جامعة الجوف',
-  'جامعة حائل',
-  'جامعة الباحة',
-  'جامعة بيشة',
-  'جامعة شقراء',
-  'جامعة سطام بن عبدالعزيز',
-  'جامعة عبدالرحمن بن فيصل',
-  'جامعة جدة',
-  'جامعة حفر الباطن',
-  'جامعة الحدود الشمالية',
+const UNIVERSITIES: { name: string; url?: string; badge?: string }[] = [
+  { name: 'جامعة الملك سعود' },
+  { name: 'جامعة الملك عبدالعزيز' },
+  { name: 'جامعة الإمام محمد بن سعود الإسلامية' },
+  { name: 'جامعة الأميرة نورة بنت عبدالرحمن' },
+  { name: 'جامعة الملك خالد' },
+  { name: 'جامعة الطائف' },
+  { name: 'جامعة القصيم' },
+  { name: 'جامعة المجمعة' },
+  { name: 'جامعة تبوك' },
+  { name: 'جامعة الجوف' },
+  { name: 'جامعة حائل' },
+  { name: 'جامعة الباحة' },
+  { name: 'جامعة بيشة' },
+  { name: 'جامعة شقراء' },
+  { name: 'جامعة سطام بن عبدالعزيز' },
+  { name: 'جامعة عبدالرحمن بن فيصل' },
+  { name: 'جامعة جدة' },
+  { name: 'جامعة حفر الباطن' },
+  { name: 'جامعة الحدود الشمالية' },
+  {
+    name: 'الأكاديمية الوطنية للصناعات العسكرية',
+    url: 'https://adi.edu.sa',
+    badge: 'مبتدئ بالتوظيف',
+  },
 ];
 
 export default function HomePage() {
@@ -31,6 +37,15 @@ export default function HomePage() {
         <section className="rounded-[2rem] border border-slate-800 bg-slate-900/90 p-10 shadow-xl shadow-teal-950/20 backdrop-blur-xl">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Image
+                  src="/logo.png"
+                  alt="شعار نُلِم"
+                  width={48}
+                  height={48}
+                  className="rounded-2xl"
+                />
+              </div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-teal-300/80">NULIM • نُليم</p>
               <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">مستشار القبول الجامعي</h1>
               <p className="max-w-2xl text-lg leading-8 text-slate-300">
@@ -240,7 +255,7 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-white">الجامعات المشمولة بالبيانات</h2>
               <p className="mt-1 text-sm text-slate-400">
                 يشمل النظام حالياً بيانات قبول{' '}
-                <span className="font-semibold text-teal-300">{UNIVERSITIES.length} جامعة</span> سعودية.
+                <span className="font-semibold text-teal-300">{UNIVERSITIES.length} مؤسسة</span> تعليمية سعودية.
               </p>
             </div>
             <span className="rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold text-teal-300">
@@ -248,24 +263,50 @@ export default function HomePage() {
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {UNIVERSITIES.map((uni) => (
-              <div
-                key={uni}
-                className="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2.5 text-center text-sm text-slate-300"
-              >
-                {uni}
-              </div>
-            ))}
+            {UNIVERSITIES.map((uni) =>
+              uni.url ? (
+                <a
+                  key={uni.name}
+                  href={uni.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative overflow-hidden rounded-2xl border border-teal-500/30 bg-teal-500/5 px-3 py-2.5 text-center text-sm text-teal-300 transition hover:border-teal-400/60 hover:bg-teal-500/10"
+                >
+                  <span className="block font-medium">{uni.name}</span>
+                  {uni.badge && (
+                    <span className="mt-1 inline-block rounded-full bg-teal-500/20 px-2 py-0.5 text-[10px] font-semibold text-teal-400">
+                      {uni.badge}
+                    </span>
+                  )}
+                  <span className="mt-1 block text-[10px] text-teal-500/70 opacity-0 transition-opacity group-hover:opacity-100">
+                    adi.edu.sa ↗
+                  </span>
+                </a>
+              ) : (
+                <div
+                  key={uni.name}
+                  className="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2.5 text-center text-sm text-slate-300"
+                >
+                  {uni.name}
+                </div>
+              )
+            )}
           </div>
         </section>
 
-        {/* Footer note */}
-        <p className="mt-6 text-center text-xs text-slate-600">
-          نُليم • أداة استرشادية غير رسمية — القبول الرسمي عبر{' '}
-          <a href="https://www.uap.sa/" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-teal-400">
-            uap.sa
-          </a>
-        </p>
+        <footer className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+          <p className="text-xs text-slate-600">
+            نُليم • أداة استرشادية غير رسمية — القبول الرسمي عبر{' '}
+            <a href="https://www.uap.sa/" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-teal-400">
+              uap.sa
+            </a>
+          </p>
+          <nav className="flex items-center gap-5 text-xs">
+            <Link href="/advisor" className="text-slate-500 hover:text-teal-300 transition-colors">المستشار</Link>
+            <Link href="/contact" className="text-slate-500 hover:text-teal-300 transition-colors">اتصل بنا</Link>
+            <a href="https://x.com/nulimaia" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-teal-300 transition-colors">@nulimaia</a>
+          </nav>
+        </footer>
 
       </div>
     </main>

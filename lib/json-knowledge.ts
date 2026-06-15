@@ -3,6 +3,7 @@ import {
   getSupplementalKnowledgeData,
   type UniversityItem,
 } from "@/lib/data-source";
+import { normalizeArabic } from "@/lib/utils";
 
 type IndexedKnowledgeItem = {
   id?: string | null;
@@ -61,16 +62,7 @@ const STOP_WORDS = new Set([
 const SIGNAL_LINE_REGEX =
   /(النسبة|الموزونة|المكافئة|ثانوية|قدرات|تحصيلي|قبول|تخصص|تخصصات|كلية|المسار|طلاب|طالبات|ذكور|إناث|اناث|طب|هندسة)/i;
 
-function normalizeArabic(input: string): string {
-  return input
-    .normalize("NFKD")
-    .replace(/[\u064B-\u065F\u0670]/g, "")
-    .replace(/[_\-]+/g, " ")
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
+// normalizeArabic is imported from @/lib/utils
 
 function tokenizeQuery(query: string): string[] {
   const tokens = normalizeArabic(query)
@@ -181,6 +173,16 @@ function buildIndexedKnowledge(data: UniversityItem[]): IndexedKnowledgeItem[] {
     }));
 }
 
+// Module-level cache for the default knowledge index (built once)
+let _cachedDefaultIndex: IndexedKnowledgeItem[] | null = null;
+
+function getDefaultKnowledgeIndex(): IndexedKnowledgeItem[] {
+  if (!_cachedDefaultIndex) {
+    _cachedDefaultIndex = buildIndexedKnowledge(getKnowledgeData());
+  }
+  return _cachedDefaultIndex;
+}
+
 export function buildKnowledgeContext(
   userQuery: string,
   options: BuildKnowledgeContextOptions = {},
@@ -190,10 +192,9 @@ export function buildKnowledgeContext(
   const maxCharsPerDoc = options.maxCharsPerDoc ?? 2200;
   const tokens = tokenizeQuery(userQuery);
 
-  const knowledgeData = allUniversitiesData
-    ? [...allUniversitiesData, ...getSupplementalKnowledgeData()]
-    : getKnowledgeData();
-  const knowledgeIndex = buildIndexedKnowledge(knowledgeData);
+  const knowledgeIndex = allUniversitiesData
+    ? buildIndexedKnowledge([...allUniversitiesData, ...getSupplementalKnowledgeData()])
+    : getDefaultKnowledgeIndex();
 
   if (tokens.length === 0 || knowledgeIndex.length === 0) {
     return { context: "", matchedSources: [] };

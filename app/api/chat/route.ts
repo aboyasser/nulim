@@ -7,6 +7,7 @@ import {
 } from "@/lib/local-advisor";
 import { buildKnowledgeContext } from "@/lib/json-knowledge";
 import { getUniversitiesData } from "@/lib/data-source";
+import { parseGender, isMaleOnly, isFemaleOnly } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -204,7 +205,35 @@ async function callGemini(
   throw lastError ?? new GeminiProviderError("فشل الاتصال بـ Gemini.");
 }
 
+// ─── Simple in-memory rate limiter ───
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 20; // max requests per window per IP
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now >= entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > RATE_LIMIT_MAX;
+}
+
 export async function POST(req: Request) {
+  // Rate limiting
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  const ip = forwardedFor?.split(",")[0]?.trim() ?? "unknown";
+  if (isRateLimited(ip)) {
+    return Response.json(
+      { error: { message: "عدد الطلبات تجاوز الحد المسموح. حاول بعد دقيقة." } },
+      { status: 429 }
+    );
+  }
+
   try {
     const { messages, userProfile, enhanceWithGemini } = await req.json();
 
@@ -234,37 +263,12 @@ export async function POST(req: Request) {
     const profile: UserProfile | undefined =
       userProfile && typeof userProfile === "object" ? userProfile : undefined;
 
-    // استخدم parseGender لتحديد الجنس (النص أولاً ثم الـ profile)
+    // استخدم parseGender الموحّدة من utils (النص أولاً ثم الـ profile)
     const latestMessage = sanitizedMessages.filter((m) => m.role === "user").slice(-1)[0]?.content ?? "";
-    const { parseGender: _parseGender } = await import("@/lib/local-advisor").then(m => ({ parseGender: m.buildAdvisorSummary }));
-    // نستخرج الجنس الفعلي من الرسالة مع الـ profile كاحتياطي
-    const detectedGender = (() => {
-      const normalize = (t: string) => t.normalize("NFKD").replace(/[\u064B-\u065F\u0670]/g,"").replace(/[إأآ]/g,"ا").replace(/ة/g,"ه").replace(/[^\p{L}\p{N}\s]/gu," ").replace(/\s+/g," ").trim().toLowerCase();
-      const n = normalize(latestMessage);
-      if (/(^|\s)(ال)?(طالبه|طالبة|بنت|بنات|انثى|اناث|انثه)(\s|$)/.test(n)) return "female";
-      if (/(^|\s)(ال)?(طالب|ولد|اولاد|ذكر|ذكور)(\s|$)/.test(n) && !/(طالبه|طالبات)/.test(n)) return "male";
-      return profile?.gender;
-    })();
+    const userGender = parseGender(latestMessage, profile?.gender);
 
     // Hard-Filtering by Gender
     let filteredUniversities = getUniversitiesData();
-    const userGender = detectedGender;
-
-    // دالة تحديد إذا كان البرنامج مخصصاً للطلاب فقط (لحذفه عند female)
-    function isMaleOnly(rawGender: string | undefined) {
-      if (!rawGender) return false;
-      const g = rawGender.normalize("NFKD").replace(/[\u064B-\u065F\u0670]/g, "").replace(/[إأآ]/g, "ا");
-      if (g.includes("طالبات")) return false;
-      return /طلاب\s*فقط/.test(g) || /\(طلاب\)/.test(g) || /للطلاب\b/.test(g) || /^الطلاب$/.test(g.trim()) || g.includes("طلاب");
-    }
-
-    // دالة تحديد إذا كان البرنامج مخصصاً للطالبات فقط (لحذفه عند male)
-    function isFemaleOnly(rawGender: string | undefined) {
-      if (!rawGender) return false;
-      const g = rawGender.normalize("NFKD").replace(/[\u064B-\u065F\u0670]/g, "").replace(/[إأآ]/g, "ا");
-      if (g.includes("طلاب")) return false;
-      return /طالبات\s*فقط/.test(g) || /\(طالبات\)/.test(g) || /للطالبات\b/.test(g) || /^الطالبات$/.test(g.trim()) || g.includes("طالبات");
-    }
 
     if (userGender === "male") {
       filteredUniversities = filteredUniversities
