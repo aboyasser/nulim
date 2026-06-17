@@ -289,10 +289,15 @@ function extractInterest(text: string) {
   return bestMatch;
 }
 
+/** يجرد بادئات حروف الجر العربية المركبة (لل، بال، وال…) ثم «ال» التعريف */
+function stripArabicPrefix(token: string): string {
+  return token.replace(/^(?:لل|بال|وال|فال|كال|ال)/, "");
+}
+
 function tokenizeNormalized(text: string) {
   return normalizeArabic(text)
     .split(" ")
-    .map((token) => token.replace(/^ال/, ""))
+    .map(stripArabicPrefix)
     .filter((token) => token.length > 1);
 }
 
@@ -335,7 +340,12 @@ function programMatchesInterest(program: ProgramItem, interest: string | undefin
 
   // مطابقة العبارات المركبة كاملاً أولاً (الأولوية للأكثر تحديداً)
   if (normalizedInterest.includes(" ")) {
-    if (normalizedText.includes(normalizedInterest)) {
+    // مطابقة مباشرة أو بعد تجريد بادئات «ال» من كل كلمة في النص
+    const strippedText = normalizedText
+      .split(" ")
+      .map(stripArabicPrefix)
+      .join(" ");
+    if (normalizedText.includes(normalizedInterest) || strippedText.includes(normalizedInterest)) {
       return true;
     }
     // تحقق من وجود كلمات جذرية رئيسية (أكثر من 60% من كلمات الاهتمام)
@@ -817,6 +827,21 @@ export function buildLocalAdvisorReply(
   }
 
   if (recommendations.length === 0) {
+    const hasScores =
+      summary.scores.secondary !== undefined ||
+      summary.scores.qiyas !== undefined;
+    if (hasScores) {
+      const weighted = summary.weighted ? ` (النسبة الموزونة التقريبية: ${summary.weighted}%)` : "";
+      return [
+        `لم أجد برامج مطابقة لدرجاتك${weighted} في قاعدة بياناتنا الحالية.`,
+        "",
+        "قد يكون السبب:",
+        "- درجاتك أقل من الحد الأدنى المطلوب للتخصص المذكور.",
+        "- التخصص غير متوفر في الجامعات المشمولة بالبيانات حالياً.",
+        "",
+        "جرّب تخصصاً آخر أو اسأل عن جامعة معينة للحصول على تفاصيل شروط القبول.",
+      ].join("\n");
+    }
     return "أقدر أساعدك، لكن احتجت تفاصيل أكثر مثل: نسبة الثانوية، القدرات، التحصيلي، والتخصص المطلوب.\n\nمثال: نسبتي 88، قدراتي 76، تحصيلي 82، أريد هندسة.";
   }
 

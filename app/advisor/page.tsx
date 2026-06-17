@@ -145,6 +145,7 @@ export default function AdvisorPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [elapsed, setElapsed] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -255,112 +256,245 @@ export default function AdvisorPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8 rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl shadow-teal-950/20 backdrop-blur-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Image
-                  src="/logo.png"
-                  alt="شعار نُلِم"
-                  width={40}
-                  height={40}
-                  className="rounded-xl"
-                />
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-teal-300/80">NULIM • نُلِم</p>
-              </div>
-              <h1 className="mt-3 text-3xl font-semibold text-slate-50 sm:text-4xl">مستشار القبول الجامعي السعودي</h1>
-              <p className="mt-3 max-w-2xl text-slate-400 sm:text-base">استخدم محادثة إرشادية تعتمد على بيانات القبول المحلية للتوجيه الجامعي العربي.</p>
-            </div>
-            <div className="flex gap-3 items-center">
+    <main className="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 font-sans overflow-hidden">
+      {/* Top Header */}
+      <header className="h-16 shrink-0 border-b border-slate-900 bg-slate-900/80 backdrop-blur-sm px-4 md:px-6 flex items-center justify-between z-30">
+        <div className="flex items-center gap-3">
+          <Image
+            src="/logo.png"
+            alt="شعار نُلِم"
+            width={34}
+            height={34}
+            className="rounded-lg"
+          />
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-400/85 block leading-none">NULIM</span>
+            <span className="text-sm font-semibold text-slate-200 mt-1 block">نُلِم • مستشار القبول</span>
+          </div>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          {/* Quick Actions */}
+          <button
+            type="button"
+            onClick={clearChat}
+            className="inline-flex items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20 active:scale-95 cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="ml-1.5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            محادثة جديدة
+          </button>
+          
+          <Link
+            href="/contact"
+            className="hidden sm:inline-flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900/50 px-3 py-2 text-xs font-semibold text-slate-350 transition hover:bg-slate-800 hover:text-white"
+          >
+            اتصل بنا
+          </Link>
+          
+          <Link
+            href="/"
+            className="hidden sm:inline-flex items-center justify-center rounded-xl border border-teal-500/20 bg-teal-500/10 px-3 py-2 text-xs font-semibold text-teal-200 transition hover:bg-teal-500/20"
+          >
+            الرئيسية
+          </Link>
+
+          {/* Toggle Sidebar Button (Mobile) */}
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden rounded-xl border border-slate-800 p-2 text-slate-400 hover:bg-slate-900 hover:text-white transition cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      {/* Main Workspace Container */}
+      <div className="flex-1 flex overflow-hidden relative">
+        
+        {/* Desktop Sidebar (RTL: appears on the right of the screen) */}
+        <aside className="hidden md:flex w-80 flex-col shrink-0 border-l border-slate-900/60 bg-slate-900/20 p-6 overflow-y-auto space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-base font-bold text-white">ابدأ المحادثة مع نُلِم</h2>
+            <p className="text-xs leading-5 text-slate-400">
+              أدخل درجاتك ورغبتك (مثل: نسبتي، قدراتي، تحصيلي والتخصص المطلوب)، وسأقترح لك خيارات البرامج والجامعات المناسبة لك بناءً على بيانات القبول المحلية المحدثة.
+            </p>
+          </div>
+
+          <hr className="border-slate-900/80" />
+
+          {/* Gender Profile */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-teal-400/80 block">حالة المستخدم (طالب / طالبة)</label>
+            <div className="grid grid-cols-2 gap-2 mt-2">
               <button
                 type="button"
-                onClick={clearChat}
-                className="inline-flex items-center justify-center rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20"
+                className={`rounded-xl py-2.5 text-xs font-semibold transition cursor-pointer ${gender === 'male' ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10' : 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:bg-slate-800/80'}`}
+                onClick={() => setGender('male')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                محادثة جديدة
+                طالب
               </button>
-              <Link href="/contact" className="inline-flex items-center justify-center rounded-2xl border border-slate-600/50 bg-slate-800/50 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-slate-700/70 hover:text-white">اتصل بنا</Link>
-              <Link href="/" className="inline-flex items-center justify-center rounded-2xl border border-teal-500/30 bg-teal-500/10 px-4 py-3 text-sm font-semibold text-teal-100 transition hover:bg-teal-500/20">العودة للرئيسية</Link>
-            </div>
-          </div>
-        </header>
-
-        <section className="mb-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-xl shadow-slate-950/20 backdrop-blur-sm">
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-teal-300/80">الشرح</p>
-              <h2 className="text-2xl font-semibold text-white">ابدأ المحادثة مع نُلِم</h2>
-              <p className="text-slate-400">أدخل درجاتك ورغبتك، وسأقترح لك خيارات جامعات وبرامج مناسبة بناءً على البيانات المحلية.</p>
-            </div>
-            <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 scrollbar-thin">
-              {QUICK_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => sendMessage(prompt)}
-                  className="shrink-0 rounded-2xl border border-slate-700 bg-slate-800/80 px-4 py-3 text-sm text-slate-100 transition hover:border-teal-400/60 hover:bg-slate-700/90"
-                >
-                  {prompt}
-                </button>
-              ))}
+              <button
+                type="button"
+                className={`rounded-xl py-2.5 text-xs font-semibold transition cursor-pointer ${gender === 'female' ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10' : 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:bg-slate-800/80'}`}
+                onClick={() => setGender('female')}
+              >
+                طالبة
+              </button>
             </div>
           </div>
 
-          <aside className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-xl shadow-slate-950/20 backdrop-blur-sm">
-            <div>
-              <p className="text-sm font-semibold text-teal-300/90">حالة المستخدم</p>
-              <div className="mt-3 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  className={`rounded-2xl px-4 py-3 text-sm transition ${gender === 'male' ? 'bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/20' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
-                  onClick={() => setGender('male')}
-                >
-                  طالب
-                </button>
-                <button
-                  type="button"
-                  className={`rounded-2xl px-4 py-3 text-sm transition ${gender === 'female' ? 'bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/20' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
-                  onClick={() => setGender('female')}
-                >
-                  طالبة
-                </button>
-              </div>
-            </div>
-            <div className="rounded-3xl border border-slate-800 bg-slate-950/80 p-4 text-sm text-slate-300">
-              <p className="font-semibold text-teal-200">نصائح سريعة</p>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-400">
-                <li>اكتب نسبتك، قدراتك، تحصيليتك، ورغبتك.</li>
-                <li>يمكنك استخدام Enter للإرسال وShift+Enter لسطر جديد.</li>
-                <li>يتم حفظ المحادثة محلياً في المتصفح.</li>
-              </ul>
-            </div>
-          </aside>
-        </section>
+          <hr className="border-slate-900/80" />
 
-        <div className="mb-6 rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-xl shadow-slate-950/20 backdrop-blur-sm">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold text-white">المحادثة</h2>
-                <p className="text-sm text-slate-400">أرسل سؤالك واستلم التوصية الجامعية الذكية.</p>
-              </div>
-              <span className="rounded-full bg-teal-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-teal-100">البيانات المحلية</span>
-            </div>
+          {/* Quick Tips */}
+          <div className="rounded-2xl border border-slate-900 bg-slate-950/40 p-4 space-y-3">
+            <p className="text-xs font-bold text-teal-300 flex items-center gap-1.5">
+              <span>💡</span> نصائح سريعة
+            </p>
+            <ul className="list-disc space-y-2 pr-4 text-[11px] text-slate-400 leading-normal">
+              <li>اكتب نسبتك، قدراتك، تحصيليتك، ورغبتك.</li>
+              <li>يمكنك استخدام Enter للإرسال وShift+Enter لسطر جديد.</li>
+              <li>يتم حفظ المحادثة محلياً في المتصفح.</li>
+            </ul>
+          </div>
 
-            <div className="min-h-[320px] max-h-[520px] space-y-4 overflow-y-auto rounded-3xl border border-slate-800 bg-slate-950/95 p-4">
+          <div className="flex-1" />
+
+          {/* Footer inside sidebar */}
+          <div className="text-[10px] text-slate-500 leading-relaxed space-y-2">
+            <p>© 2025 نُلِم — أداة استرشادية غير رسمية.</p>
+            <div className="flex gap-3">
+              <Link href="/" className="hover:text-teal-400 transition">الرئيسية</Link>
+              <Link href="/contact" className="hover:text-teal-400 transition">اتصل بنا</Link>
+            </div>
+          </div>
+        </aside>
+
+        {/* Mobile Sidebar (Slide-over Drawer) */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        <div className={`fixed inset-y-0 right-0 z-50 w-72 bg-slate-900 border-l border-slate-800 p-6 flex flex-col gap-6 overflow-y-auto transform transition-transform duration-300 md:hidden ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-teal-300">معلومات المستشار</p>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-sm font-bold text-white">ابدأ المحادثة مع نُلِم</h2>
+            <p className="text-xs leading-5 text-slate-400">
+              أدخل درجاتك ورغبتك وسأقترح لك خيارات البرامج والجامعات المناسبة لك بناءً على بيانات القبول المحلية المحدثة.
+            </p>
+          </div>
+
+          <hr className="border-slate-800" />
+
+          {/* Gender Profile */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-teal-400/80 block">حالة المستخدم (طالب / طالبة)</label>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <button
+                type="button"
+                className={`rounded-xl py-2.5 text-xs font-semibold transition cursor-pointer ${gender === 'male' ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10' : 'bg-slate-950/60 border border-slate-800 text-slate-350 hover:bg-slate-800/80'}`}
+                onClick={() => {
+                  setGender('male');
+                  setSidebarOpen(false);
+                }}
+              >
+                طالب
+              </button>
+              <button
+                type="button"
+                className={`rounded-xl py-2.5 text-xs font-semibold transition cursor-pointer ${gender === 'female' ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10' : 'bg-slate-950/60 border border-slate-800 text-slate-350 hover:bg-slate-800/80'}`}
+                onClick={() => {
+                  setGender('female');
+                  setSidebarOpen(false);
+                }}
+              >
+                طالبة
+              </button>
+            </div>
+          </div>
+
+          <hr className="border-slate-800" />
+
+          {/* Quick Tips */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 space-y-3">
+            <p className="text-xs font-bold text-teal-300 flex items-center gap-1.5">
+              <span>💡</span> نصائح سريعة
+            </p>
+            <ul className="list-disc space-y-2 pr-4 text-[11px] text-slate-400 leading-normal">
+              <li>اكتب نسبتك، قدراتك، تحصيليتك، ورغبتك.</li>
+              <li>يمكنك استخدام Enter للإرسال وShift+Enter لسطر جديد.</li>
+              <li>يتم حفظ المحادثة محلياً في المتصفح.</li>
+            </ul>
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Navigation links for mobile sidebar */}
+          <div className="space-y-3 border-t border-slate-800 pt-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white transition"
+              onClick={() => setSidebarOpen(false)}
+            >
+              🏠 العودة للرئيسية
+            </Link>
+            <Link
+              href="/contact"
+              className="flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white transition"
+              onClick={() => setSidebarOpen(false)}
+            >
+              📞 اتصل بنا
+            </Link>
+          </div>
+        </div>
+
+        {/* Chat Area Workspace */}
+        <section className="flex-1 flex flex-col h-full bg-slate-950/30 overflow-hidden relative">
+          
+          {/* Messages Container */}
+          <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-6 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+            <div className="max-w-3xl mx-auto space-y-6">
               {messages.map((message, index) => {
                 const isUser = message.role === 'user';
                 return (
-                  <div key={index} className={`flex flex-col gap-2 ${isUser ? 'items-end' : 'items-start'}`}>
-                    {/* Avatar label */}
-                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${isUser ? 'text-teal-400/60' : 'text-slate-500'}`}>
-                      {isUser ? 'أنت' : 'نُلِم'}
-                    </span>
-                    <div className={`max-w-xl rounded-3xl p-4 text-sm leading-7 ${isUser ? 'bg-teal-500/10 text-slate-100' : 'bg-slate-800 text-slate-200'}`}>
+                  <div
+                    key={index}
+                    className="flex flex-col gap-1.5"
+                    style={{ alignItems: isUser ? 'flex-end' : 'flex-start' }}
+                  >
+                    {/* Header line for sender */}
+                    <div className="flex items-center gap-1.5 px-2">
+                      <span className={`text-[10px] font-semibold uppercase tracking-wider ${isUser ? 'text-teal-400/80' : 'text-slate-500'}`}>
+                        {isUser ? 'أنت' : 'مستشار نُلِم'}
+                      </span>
+                    </div>
+
+                    {/* Chat Bubble content container */}
+                    <div
+                      className={`w-full max-w-xl rounded-2xl p-4 shadow-sm text-sm leading-7 transition-all ${
+                        isUser
+                          ? 'bg-slate-900 border border-slate-800/80 text-slate-200 rounded-tl-none'
+                          : 'bg-teal-950/20 border border-teal-500/10 text-slate-100 rounded-tr-none'
+                      }`}
+                    >
                       {message.typing ? (
                         <div className="flex items-center gap-3">
                           <div className="flex gap-1.5">
@@ -375,7 +509,7 @@ export default function AdvisorPage() {
                       ) : isUser ? (
                         <span className="whitespace-pre-wrap break-words">{message.content}</span>
                       ) : (
-                        <div className="prose-sm">{renderMarkdown(message.content)}</div>
+                        <div className="prose-sm max-w-none">{renderMarkdown(message.content)}</div>
                       )}
                     </div>
                   </div>
@@ -383,60 +517,85 @@ export default function AdvisorPage() {
               })}
               <div ref={endRef} />
             </div>
+          </div>
 
-            {error ? (
-              <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-200">
-                <span className="ml-2">⚠️</span>{error}
+          {/* Error Banner */}
+          {error ? (
+            <div className="mx-4 md:mx-8 my-2 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs text-rose-300 flex items-center gap-2 max-w-3xl md:mx-auto w-full shrink-0">
+              <span className="text-sm">⚠️</span>
+              <span>{error}</span>
+            </div>
+          ) : null}
+
+          {/* Bottom Input Section */}
+          <div className="p-4 md:p-6 border-t border-slate-900/60 bg-slate-900/20 backdrop-blur-md shrink-0 flex flex-col gap-3">
+            <div className="max-w-3xl mx-auto w-full space-y-3">
+              
+              {/* Quick Suggestions Row */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none scroll-smooth shrink-0" style={{ direction: 'rtl' }}>
+                {QUICK_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => sendMessage(prompt)}
+                    className="shrink-0 rounded-full border border-slate-800/80 bg-slate-900/40 hover:bg-slate-850 hover:border-teal-500/30 px-3.5 py-1.5 text-xs text-slate-300 transition duration-150 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {prompt}
+                  </button>
+                ))}
               </div>
-            ) : null}
 
-            <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={input}
-                disabled={busy}
-                placeholder="اكتب نسبك أو سؤالك هنا..."
-                className="min-h-[56px] resize-none rounded-3xl border border-slate-800 bg-slate-950/90 p-4 text-sm text-slate-100 outline-none transition focus:border-teal-400/60 focus:ring-1 focus:ring-teal-400/30"
-                onChange={(event) => {
-                  setInput(event.target.value);
-                  event.target.style.height = 'auto';
-                  event.target.style.height = `${Math.min(event.target.scrollHeight, 160)}px`;
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault();
-                    sendMessage();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                disabled={busy || !input.trim()}
-                onClick={() => sendMessage()}
-                className="inline-flex min-h-[56px] items-center justify-center rounded-3xl bg-teal-500 px-6 py-4 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:bg-slate-700/60 disabled:text-slate-500"
-              >
-                {busy ? (
-                  <span className="flex items-center gap-2">
+              {/* Text Area & Input Box */}
+              <div className="relative flex items-center bg-slate-950/80 border border-slate-850 focus-within:border-teal-500/40 rounded-2xl p-1.5 transition duration-200 shadow-inner">
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  value={input}
+                  disabled={busy}
+                  placeholder="اكتب درجاتك ونسبك، أو سؤالك هنا..."
+                  className="flex-1 min-h-[44px] max-h-[140px] resize-none bg-transparent px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition"
+                  onChange={(event) => {
+                    setInput(event.target.value);
+                    event.target.style.height = 'auto';
+                    event.target.style.height = `${Math.min(event.target.scrollHeight, 140)}px`;
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                />
+                
+                <button
+                  type="button"
+                  disabled={busy || !input.trim()}
+                  onClick={() => sendMessage()}
+                  className="h-10 px-4 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 disabled:bg-slate-800 disabled:text-slate-500 disabled:scale-100 shrink-0 cursor-pointer"
+                >
+                  {busy ? (
                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
                       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
                       <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
                     </svg>
-                    جارٍ الإرسال...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                    أرسل
-                  </span>
-                )}
-              </button>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2500/svg" className="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                      <span>أرسل</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+
+        </section>
+
       </div>
     </main>
   );
 }
+

@@ -14,17 +14,38 @@ const FEEDBACK_TYPES = [
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', type: 'suggestion', message: '' });
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const subject = encodeURIComponent(
-      `[نُلِم] ${FEEDBACK_TYPES.find((t) => t.value === form.type)?.label ?? form.type} — ${form.name || 'مجهول'}`
-    );
-    const body = encodeURIComponent(
-      `الاسم: ${form.name || 'لم يُذكر'}\nنوع الملاحظة: ${FEEDBACK_TYPES.find((t) => t.value === form.type)?.label}\n\n${form.message}`
-    );
-    window.location.href = `mailto:nulimai@outlook.com?subject=${subject}&body=${body}`;
-    setSent(true);
+    if (!form.message.trim() || loading) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          type: form.type,
+          message: form.message,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error?.message || `خطأ في الاتصال (${response.status})`);
+      }
+
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء إرسال الملاحظة.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -136,9 +157,12 @@ export default function ContactPage() {
               <div className="rounded-2xl border border-teal-500/30 bg-teal-500/10 px-6 py-8 text-center space-y-3">
                 <span className="text-4xl">✅</span>
                 <p className="text-lg font-semibold text-teal-300">شكراً لك!</p>
-                <p className="text-sm text-slate-400">تم فتح تطبيق البريد لإرسال ملاحظتك. نقدّر مساهمتك في تطوير نُلِم.</p>
+                <p className="text-sm text-slate-400">تم إرسال ملاحظتك مباشرة وبنجاح. نقدّر مساهمتك في تطوير نُلِم.</p>
                 <button
-                  onClick={() => setSent(false)}
+                  onClick={() => {
+                    setForm({ name: '', type: 'suggestion', message: '' });
+                    setSent(false);
+                  }}
                   className="mt-2 text-xs text-slate-500 hover:text-teal-400 underline underline-offset-2 transition"
                 >
                   إرسال ملاحظة أخرى
@@ -146,6 +170,12 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5" dir="rtl">
+                {error && (
+                  <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-250 text-right">
+                    <span className="ml-2">⚠️</span>{error}
+                  </div>
+                )}
+
                 {/* Name */}
                 <div className="space-y-1.5">
                   <label htmlFor="feedback-name" className="block text-sm font-medium text-slate-300">
@@ -154,10 +184,11 @@ export default function ContactPage() {
                   <input
                     id="feedback-name"
                     type="text"
+                    disabled={loading}
                     placeholder="اسمك أو كنيتك"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/30"
+                    className="w-full rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/30 disabled:opacity-50"
                   />
                 </div>
 
@@ -171,12 +202,13 @@ export default function ContactPage() {
                       <button
                         key={t.value}
                         type="button"
+                        disabled={loading}
                         onClick={() => setForm({ ...form, type: t.value })}
                         className={`rounded-2xl border px-3 py-2.5 text-xs font-medium text-right transition ${
                           form.type === t.value
                             ? 'border-teal-500/60 bg-teal-500/10 text-teal-300'
                             : 'border-slate-700 bg-slate-950/40 text-slate-400 hover:border-slate-600 hover:text-slate-300'
-                        }`}
+                        } disabled:opacity-50`}
                       >
                         {t.label}
                       </button>
@@ -192,28 +224,41 @@ export default function ContactPage() {
                   <textarea
                     id="feedback-message"
                     required
+                    disabled={loading}
                     rows={5}
                     placeholder="اكتب ملاحظتك أو اقتراحك هنا…"
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full resize-none rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/30"
+                    className="w-full resize-none rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition focus:border-teal-500/60 focus:ring-1 focus:ring-teal-500/30 disabled:opacity-50"
                   />
                 </div>
 
                 {/* Submit */}
                 <button
                   type="submit"
-                  className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-teal-500 px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 active:scale-95"
+                  disabled={loading}
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-teal-500 px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 active:scale-95 disabled:bg-slate-800 disabled:text-slate-500 disabled:scale-100 disabled:cursor-not-allowed"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                  إرسال الملاحظة
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="h-4 w-4 animate-spin text-slate-950" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+                      </svg>
+                      جارٍ الإرسال...
+                    </span>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                      إرسال الملاحظة
+                    </>
+                  )}
                 </button>
 
                 <p className="text-center text-[11px] text-slate-600">
-                  سيُفتح تطبيق البريد الإلكتروني لإرسال رسالتك إلى{' '}
-                  <span className="text-slate-500">nulimai@outlook.com</span>
+                  سيتم إرسال رسالتك مباشرة وبسرية تامة إلى فريق نُلِم.
                 </p>
               </form>
             )}
