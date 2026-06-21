@@ -46,10 +46,10 @@ export default function HomePage() {
                   className="rounded-2xl"
                 />
               </div>
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-teal-300/80">NULIM • نُليم</p>
-              <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">مستشار القبول الجامعي</h1>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-teal-300/80">NULIM • نُليم • نلم</p>
+              <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">مستشار القبول الجامعي | نُلِم</h1>
               <p className="max-w-2xl text-lg leading-8 text-slate-300">
-                أداة توجيه ذكية تحسب نسبتك الموزونة وتقترح لك البرامج الجامعية المناسبة بناءً على بيانات القبول المحلية.
+                منصة <strong>نُلِم (Nulim)</strong> هي مستشار القبول الجامعي الذكي الذي يحسب نسبتك الموزونة والمكافئة ويقترح البرامج الجامعية المناسبة في السعودية بناءً على معايير القبول الموحد الرسمية.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
@@ -293,6 +293,82 @@ export default function HomePage() {
             )}
           </div>
         </section>
+
+        {/* FAQ Section */}
+        <section className="mt-6 rounded-[2rem] border border-slate-800 bg-slate-900/90 p-8 shadow-xl shadow-slate-950/20">
+          <h2 className="text-2xl font-semibold text-white mb-6 text-center">الأسئلة الشائعة حول منصة نلم (FAQ)</h2>
+          <div className="space-y-6">
+            <div className="rounded-2xl bg-slate-950/60 p-5 border border-slate-850">
+              <h3 className="text-base font-semibold text-teal-300 mb-2">ما هي منصة نلم (Nulim)؟</h3>
+              <p className="text-sm text-slate-300 leading-6">
+                منصة نلم هي مستشار قبول جامعي ذكي يعتمد على تقنيات الذكاء الاصطناعي لمساعدة خريجي الثانوية العامة في السعودية على معرفة خيارات القبول المتاحة لهم بناءً على درجاتهم (ثانوية، قدرات، تحصيلي).
+              </p>
+            </div>
+            <div className="rounded-2xl bg-slate-950/60 p-5 border border-slate-850">
+              <h3 className="text-base font-semibold text-teal-300 mb-2">كيف أحسب النسبة الموزونة للجامعات السعودية؟</h3>
+              <p className="text-sm text-slate-300 leading-6">
+                يمكنك كتابة درجاتك مباشرة في مستشار نلم الذكي (مثال: "درجاتي 90 ثانوية، 80 قدرات، 85 تحصيلي")، وسيقوم النظام تلقائياً بحساب النسبة الموزونة والمكافئة لكل جامعة وتخصص بناءً على المعايير الرسمية المعتمدة لكل منها.
+              </p>
+            </div>
+            <div className="rounded-2xl bg-slate-950/60 p-5 border border-slate-850">
+              <h3 className="text-base font-semibold text-teal-300 mb-2">هل نتائج وتوصيات منصة نلم رسمية؟</h3>
+              <p className="text-sm text-slate-300 leading-6">
+                لا، منصة نلم هي أداة استرشادية ذكية تهدف لتسهيل عملية البحث وتقليل الحيرة لدى الطلاب وأولياء الأمور. يجب دائماً مراجعة بوابات القبول الرسمية وتأكيد التقديم عبر المنصة الوطنية الموحدة للقبول (uap.sa).
+              </p>
+            </div>
+            <div className="rounded-2xl bg-slate-950/60 p-5 border border-slate-850">
+              <h3 className="text-base font-semibold text-teal-300 mb-2">ما هي الجامعات والكليات المشمولة في منصة نلم؟</h3>
+              <p className="text-sm text-slate-300 leading-6">
+                تشمل المنصة بيانات أكثر من 21 مؤسسة تعليمية حكومية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "ما هي منصة نلم (Nulim)؟",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "منصة نلم هي مستشار قبول جامعي ذكي يعتمد على تقنيات الذكاء الاصطناعي لمساعدة خريجي الثانوية العامة في السعودية على معرفة خيارات القبول المتاحة لهم بناءً على درجاتهم (ثانوية، قدرات، تحصيلي)."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "كيف أحسب النسبة الموزونة للجامعات السعودية؟",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "يمكنك كتابة درجاتك مباشرة في مستشار نلم الذكي (مثال: \"درجاتي 90 ثانوية، 80 قدرات، 85 تحصيلي\")، وسيقوم النظام تلقائياً بحساب النسبة الموزونة والمكافئة لكل جامعة وتخصص بناءً على المعايير الرسمية المعتمدة لكل منها."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "هل نتائج وتوصيات منصة نلم رسمية؟",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "لا، منصة نلم هي أداة استرشادية ذكية تهدف لتسهيل عملية البحث وتقليل الحيرة لدى الطلاب وأولياء الأمور. يجب دائماً مراجعة بوابات القبول الرسمية وتأكيد التقديم عبر المنصة الوطنية الموحدة للقبول (uap.sa)."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "ما هي الجامعات والكليات المشمولة في منصة نلم؟",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "تشمل المنصة بيانات أكثر من 21 مؤسسة تعليمية حكومية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف."
+                  }
+                }
+              ]
+            })
+          }}
+        />
 
         <footer className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
           <p className="text-xs text-slate-600">

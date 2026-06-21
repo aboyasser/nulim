@@ -12,17 +12,29 @@ const tajawal = Tajawal({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://nulim.vercel.app'),
-  title: "نُلِم | مستشار القبول الجامعي",
+  title: {
+    default: "نلم | مستشار القبول الجامعي الذكي للجامعات السعودية - Nulim",
+    template: "%s | نلم - مستشار القبول الجامعي"
+  },
   description:
-    "مستشار قبول جامعي ذكي يساعد الطلاب والطالبات في السعودية على تحليل النسب الموزونة والمكافئة واختيار أنسب الجامعات والتخصصات من بين 21 جامعة وأكثر من 1000 برنامج.",
-  applicationName: "نُلِم",
+    "منصة نلم (Nulim) هي مستشار القبول الجامعي الذكي بالذكاء الاصطناعي في السعودية. تساعد الطلاب والطالبات على حساب النسبة الموزونة والمكافئة واكتشاف التخصصات المتاحة في 21 جامعة وكلية عسكرية.",
+  applicationName: "نلم - Nulim",
   keywords: [
-    "مستشار قبول",
+    "نلم",
+    "نُلِم",
+    "نليم",
+    "NULIM",
+    "Nulim",
+    "مستشار القبول",
+    "مستشار القبول الجامعي",
+    "مستشار القبول نلم",
+    "منصة نلم",
+    "موقع نلم",
     "جامعات السعودية",
     "نسبة موزونة",
     "قبول جامعي",
-    "نُلِم",
-    "NULIM",
+    "المنصة الوطنية للقبول الموحد",
+    "uap.sa",
     "تخصصات جامعية",
     "قدرات",
     "تحصيلي",
@@ -36,18 +48,18 @@ export const metadata: Metadata = {
     shortcut: "/favicon-32.png",
   },
   openGraph: {
-    title: "نُلِم | مستشار القبول الجامعي",
+    title: "نلم | مستشار القبول الجامعي الذكي للجامعات السعودية - Nulim",
     description:
-      "حلل نسبتك واسأل عن أفضل فرص القبول في الجامعات السعودية.",
+      "منصة نلم (Nulim) تساعد طلاب وطالبات السعودية على حساب النسبة الموزونة والمكافئة واكتشاف أفضل فرص وتخصصات القبول.",
     locale: "ar_SA",
     type: "website",
-    siteName: "نُلِم - NULIM",
+    siteName: "منصة نلم - NULIM",
     images: [
       {
         url: "/logo.png",
         width: 1024,
         height: 1024,
-        alt: "شعار نُلِم",
+        alt: "شعار منصة نلم - Nulim",
       },
     ],
   },
@@ -55,20 +67,23 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@nulimaia",
     creator: "@nulimaia",
-    title: "نُلِم | مستشار القبول الجامعي",
+    title: "نلم | مستشار القبول الجامعي الذكي - Nulim",
     description:
-      "مستشار قبول ذكي يحلل نسبتك ويوصي بأنسب الجامعات السعودية.",
+      "منصة نلم (Nulim) هي مستشار قبول ذكي يحلل نسبتك ويوصي بأنسب الجامعات السعودية.",
     images: ["/logo.png"],
+  },
+  verification: {
+    google: "google-site-verification-placeholder",
   },
 };
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "نُلِم - مستشار القبول الجامعي",
-  alternateName: "NULIM",
+  name: "نلم - مستشار القبول الجامعي",
+  alternateName: ["NULIM", "Nulim", "نُلِم", "نلم", "نليم"],
   description:
-    "مستشار قبول جامعي ذكي يساعد الطلاب في السعودية على تحليل النسب واختيار الجامعات.",
+    "مستشار قبول جامعي ذكي يساعد الطلاب في السعودية على حساب النسب واختيار التخصصات.",
   applicationCategory: "EducationalApplication",
   operatingSystem: "Web",
   offers: {
