@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
   },
   verification: {
-    google: "google-site-verification-placeholder",
+    google: "AHZRclUip4_qoZoNoIQyoEUnUbdGiSJxaS_b2gW-z28",
   },
 };
 
