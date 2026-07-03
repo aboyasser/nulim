@@ -2,25 +2,25 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const UNIVERSITIES: { name: string; url?: string; badge?: string }[] = [
-  { name: 'جامعة الملك سعود' },
-  { name: 'جامعة الملك عبدالعزيز' },
-  { name: 'جامعة الإمام محمد بن سعود الإسلامية' },
-  { name: 'جامعة الأميرة نورة بنت عبدالرحمن' },
-  { name: 'جامعة الملك خالد' },
-  { name: 'جامعة الطائف' },
-  { name: 'جامعة القصيم' },
-  { name: 'جامعة المجمعة' },
-  { name: 'جامعة تبوك' },
-  { name: 'جامعة الجوف' },
-  { name: 'جامعة حائل' },
-  { name: 'جامعة الباحة' },
-  { name: 'جامعة بيشة' },
-  { name: 'جامعة شقراء' },
-  { name: 'جامعة سطام بن عبدالعزيز' },
-  { name: 'جامعة عبدالرحمن بن فيصل' },
-  { name: 'جامعة جدة' },
-  { name: 'جامعة حفر الباطن' },
-  { name: 'جامعة الحدود الشمالية' },
+  { name: 'جامعة الملك سعود', url: 'https://ksu.edu.sa' },
+  { name: 'جامعة الملك عبدالعزيز', url: 'https://kau.edu.sa' },
+  { name: 'جامعة الإمام محمد بن سعود الإسلامية', url: 'https://imamu.edu.sa' },
+  { name: 'جامعة الأميرة نورة بنت عبدالرحمن', url: 'https://pnu.edu.sa' },
+  { name: 'جامعة الملك خالد', url: 'https://kku.edu.sa' },
+  { name: 'جامعة الطائف', url: 'https://tu.edu.sa' },
+  { name: 'جامعة القصيم', url: 'https://qu.edu.sa' },
+  { name: 'جامعة المجمعة', url: 'https://mu.edu.sa' },
+  { name: 'جامعة تبوك', url: 'https://ut.edu.sa' },
+  { name: 'جامعة الجوف', url: 'https://ju.edu.sa' },
+  { name: 'جامعة حائل', url: 'https://uoh.edu.sa' },
+  { name: 'جامعة الباحة', url: 'https://bu.edu.sa' },
+  { name: 'جامعة بيشة', url: 'https://ub.edu.sa' },
+  { name: 'جامعة شقراء', url: 'https://su.edu.sa' },
+  { name: 'جامعة سطام بن عبدالعزيز', url: 'https://psau.edu.sa' },
+  { name: 'جامعة عبدالرحمن بن فيصل', url: 'https://iau.edu.sa' },
+  { name: 'جامعة جدة', url: 'https://uj.edu.sa' },
+  { name: 'جامعة حفر الباطن', url: 'https://uhb.edu.sa' },
+  { name: 'جامعة الحدود الشمالية', url: 'https://nbu.edu.sa' },
   {
     name: 'الأكاديمية الوطنية للصناعات العسكرية',
     url: 'https://adi.edu.sa',
@@ -278,8 +278,8 @@ export default function HomePage() {
                       {uni.badge}
                     </span>
                   )}
-                  <span className="mt-1 block text-[10px] text-teal-500/70 opacity-0 transition-opacity group-hover:opacity-100">
-                    adi.edu.sa ↗
+                  <span className="mt-1 block text-[10px] text-teal-500/70 opacity-0 transition-opacity group-hover:opacity-100 font-mono">
+                    {uni.url.replace(/^https?:\/\/(www\.)?/, '')} ↗
                   </span>
                 </a>
               ) : (

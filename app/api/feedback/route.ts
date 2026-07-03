@@ -129,16 +129,22 @@ export async function POST(req: Request) {
         console.error('Failed to send email via SMTP:', err);
         emailError = err instanceof Error ? err.message : 'Unknown SMTP error';
       }
-    } else {
-      console.log('SMTP configuration is missing. Skipping email send. Saved to JSON file.');
+    }
+    if (!emailSent) {
+      const errorMsg = smtpHost 
+        ? `فشل إرسال البريد الإلكتروني: ${emailError}` 
+        : 'إعدادات البريد الإلكتروني (SMTP) غير مكتملة في ملف البيئة.';
+      return NextResponse.json(
+        { error: { message: errorMsg } },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'تم استلام ملاحظتك وحفظها بنجاح.',
+      message: 'تم استلام ملاحظتك وإرسالها إلى البريد الإلكتروني بنجاح.',
       localSaved: true,
-      emailSent,
-      emailWarning: !emailSent && (smtpHost ? emailError : 'SMTP is not configured in .env.local'),
+      emailSent: true,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'حدث خطأ غير متوقع.';
