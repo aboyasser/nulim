@@ -34,7 +34,7 @@ class GeminiProviderError extends Error {
 }
 
 const geminiApiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
-const geminiModel = process.env.GEMINI_MODEL ?? "gemini-2.5-flash-lite";
+const geminiModel = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 const geminiMaxRetries = Math.max(
   1,
   Number.parseInt(process.env.GEMINI_MAX_RETRIES ?? "2", 10)
@@ -45,7 +45,7 @@ const geminiRetryDelayMs = Math.max(
 );
 const geminiMaxOutputTokens = Math.max(
   250,
-  Number.parseInt(process.env.GEMINI_MAX_OUTPUT_TOKENS ?? "700", 10)
+  Number.parseInt(process.env.GEMINI_MAX_OUTPUT_TOKENS ?? "1500", 10)
 );
 const geminiResponseMode = (process.env.GEMINI_RESPONSE_MODE ?? "off").toLowerCase();
 
@@ -102,6 +102,13 @@ function toReadableGeminiMessage(status: number | undefined, message: string) {
 function buildGeminiPrompt(summary: AdvisorSummary, knowledgeContext: string) {
   const structuredIsIncomplete = !summary.dataCoverage.isComplete;
 
+  // نُرسل فقط العدد وليس القائمة الكاملة للأسماء لتوفير tokens
+  const dataCoverageSummary = {
+    totalUniversities: summary.dataCoverage.totalUniversities,
+    structuredUniversities: summary.dataCoverage.structuredUniversities,
+    isComplete: summary.dataCoverage.isComplete,
+  };
+
   return `رسالة الطالب:
 ${summary.latestUserMessage}
 
@@ -113,7 +120,7 @@ ${JSON.stringify(
     equivalent: summary.equivalent,
     mentionedUniversity: summary.mentionedUniversity,
     mentionedUniversities: summary.mentionedUniversities,
-    dataCoverage: summary.dataCoverage,
+    dataCoverage: dataCoverageSummary,
     recommendationsScope: structuredIsIncomplete
       ? "غير شاملة؛ البرامج المهيكلة متوفرة لبعض الجامعات فقط، ولا يجوز اعتبار غياب جامعة من recommendations دليلاً أنها غير مناسبة."
       : "شاملة حسب البيانات المهيكلة المتاحة.",
@@ -208,7 +215,18 @@ async function callGemini(
 // ─── Simple in-memory rate limiter ───
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX = 20; // max requests per window per IP
+const RATE_LIMIT_CLEANUP_INTERVAL = 300_000; // تنظيف كل 5 دقائق
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+// تنظيف دوري للمدخلات المنتهية لمنع تراكم الذاكرة
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap.entries()) {
+    if (now >= entry.resetAt) {
+      rateLimitMap.delete(key);
+    }
+  }
+}, RATE_LIMIT_CLEANUP_INTERVAL);
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -251,7 +269,7 @@ export async function POST(req: Request) {
           typeof message.content === "string" &&
           message.content.trim().length > 0
       )
-      .slice(-6);
+      .slice(-10);
 
     if (sanitizedMessages.length === 0) {
       return Response.json(

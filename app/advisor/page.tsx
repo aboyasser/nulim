@@ -133,7 +133,6 @@ function renderMarkdown(text: string) {
 }
 
 export default function AdvisorPage() {
-  const [gender, setGender] = useState<'male' | 'female'>('male');
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -146,6 +145,8 @@ export default function AdvisorPage() {
   const [error, setError] = useState('');
   const [elapsed, setElapsed] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [genderChanged, setGenderChanged] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -204,8 +205,16 @@ export default function AdvisorPage() {
     ]);
     setInput('');
     setError('');
+    setGenderChanged(false);
     window.localStorage.removeItem('nulim_chat_messages');
   }, []);
+
+  const handleGenderChange = useCallback((newGender: 'male' | 'female') => {
+    if (newGender !== gender) {
+      setGender(newGender);
+      setGenderChanged(true);
+    }
+  }, [gender]);
 
   async function sendMessage(text?: string) {
     const trimmed = (text ?? input).trim();
@@ -334,14 +343,14 @@ export default function AdvisorPage() {
               <button
                 type="button"
                 className={`rounded-xl py-2.5 text-xs font-semibold transition cursor-pointer ${gender === 'male' ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10' : 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:bg-slate-800/80'}`}
-                onClick={() => setGender('male')}
+                onClick={() => handleGenderChange('male')}
               >
                 طالب
               </button>
               <button
                 type="button"
                 className={`rounded-xl py-2.5 text-xs font-semibold transition cursor-pointer ${gender === 'female' ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/10' : 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:bg-slate-800/80'}`}
-                onClick={() => setGender('female')}
+                onClick={() => handleGenderChange('female')}
               >
                 طالبة
               </button>
@@ -366,7 +375,7 @@ export default function AdvisorPage() {
 
           {/* Footer inside sidebar */}
           <div className="text-[10px] text-slate-500 leading-relaxed space-y-2">
-            <p>© 2025 نُلِم — أداة استرشادية غير رسمية.</p>
+            <p>© 2026 نُلِم — أداة استرشادية غير رسمية.</p>
             <div className="flex gap-3">
               <Link href="/" className="hover:text-teal-400 transition">الرئيسية</Link>
               <Link href="/contact" className="hover:text-teal-400 transition">اتصل بنا</Link>
@@ -527,6 +536,21 @@ export default function AdvisorPage() {
             </div>
           ) : null}
 
+          {/* Gender Changed Notice */}
+          {genderChanged && messages.length > 1 ? (
+            <div className="mx-4 md:mx-8 my-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-300 flex items-center justify-between gap-2 max-w-3xl md:mx-auto w-full shrink-0">
+              <span>⚡ غيّرت الفئة — التوصيات السابقة قد تكون لجنس آخر. ابدأ محادثة جديدة للحصول على نتائج دقيقة.</span>
+              <button
+                type="button"
+                onClick={clearChat}
+                className="shrink-0 rounded-lg border border-amber-500/30 px-2 py-1 text-amber-300 hover:bg-amber-500/20 transition cursor-pointer"
+              >
+                محادثة جديدة
+              </button>
+            </div>
+          ) : null}
+
+
           {/* Bottom Input Section */}
           <div className="p-4 md:p-6 border-t border-slate-900/60 bg-slate-900/20 backdrop-blur-md shrink-0 flex flex-col gap-3">
             <div className="max-w-3xl mx-auto w-full space-y-3">
@@ -581,7 +605,7 @@ export default function AdvisorPage() {
                     </svg>
                   ) : (
                     <>
-                      <svg xmlns="http://www.w3.org/2500/svg" className="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
                       <span>أرسل</span>
