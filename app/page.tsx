@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import finalOutput from '@/public/data/final_output.json';
 
 const UNIVERSITIES: { name: string; url?: string; badge?: string }[] = [
   { name: 'جامعة الملك سعود', url: 'https://ksu.edu.sa' },
@@ -22,11 +23,24 @@ const UNIVERSITIES: { name: string; url?: string; badge?: string }[] = [
   { name: 'جامعة حفر الباطن', url: 'https://uhb.edu.sa' },
   { name: 'جامعة الحدود الشمالية', url: 'https://nbu.edu.sa' },
   {
+    name: 'جامعة الملك سعود بن عبدالعزيز للعلوم الصحية',
+    url: 'https://ksau-hs.edu.sa/Arabic/Pages/Home.aspx',
+  },
+  { name: 'جامعة نجران', url: 'https://portal.nu.edu.sa/ar/home' },
+  { name: 'جامعة الملك فيصل', url: 'https://www.kfu.edu.sa/ar/Pages/Home.aspx' },
+  {
     name: 'الأكاديمية الوطنية للصناعات العسكرية',
     url: 'https://adi.edu.sa',
     badge: 'مبتدئ بالتوظيف',
   },
 ];
+
+// Append newly-merged universities from final_output.json (if present)
+const EXTRA_UNIS = (Array.isArray(finalOutput) ? finalOutput : [])
+  .filter((u: any) => ['KSAU-HS', 'NU', 'KFU'].includes(u.id))
+  .map((u: any) => ({ name: u.name, url: undefined as undefined, badge: undefined as undefined }));
+
+const DISPLAY_UNIVERSITIES = [...UNIVERSITIES].filter(u => u.url);
 
 export default function HomePage() {
   return (
@@ -255,7 +269,7 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-white">الجامعات المشمولة بالبيانات</h2>
               <p className="mt-1 text-sm text-slate-400">
                 يشمل النظام حالياً بيانات قبول{' '}
-                <span className="font-semibold text-teal-300">{UNIVERSITIES.length} مؤسسة</span> تعليمية سعودية.
+                <span className="font-semibold text-teal-300">{DISPLAY_UNIVERSITIES.length} مؤسسة</span> تعليمية سعودية.
               </p>
             </div>
             <span className="rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold text-teal-300">
@@ -263,10 +277,10 @@ export default function HomePage() {
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {UNIVERSITIES.map((uni) =>
+            {DISPLAY_UNIVERSITIES.map((uni, index) =>
               uni.url ? (
                 <a
-                  key={uni.name}
+                  key={`${uni.name}-${index}`}
                   href={uni.url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -284,7 +298,7 @@ export default function HomePage() {
                 </a>
               ) : (
                 <div
-                  key={uni.name}
+                  key={`${uni.name}-${index}`}
                   className="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2.5 text-center text-sm text-slate-300"
                 >
                   {uni.name}
