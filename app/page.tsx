@@ -36,9 +36,10 @@ const UNIVERSITIES: { name: string; url?: string; badge?: string }[] = [
   },
 ];
 
-// Append newly-merged universities from final_output.json (if present)
+// Append newly-merged universities from final_output.json that are NOT already in UNIVERSITIES
 const EXTRA_UNIS = (Array.isArray(finalOutput) ? finalOutput : [])
   .filter((u: any) => ['KSAU-HS', 'NU', 'KFU', 'TAIBAH'].includes(u.id))
+  .filter((u: any) => !UNIVERSITIES.find(uni => uni.name === u.name))
   .map((u: any) => ({ name: u.name, url: undefined as undefined, badge: undefined as undefined }));
 
 const DISPLAY_UNIVERSITIES = [...UNIVERSITIES, ...EXTRA_UNIS].filter(u => u.name);
