@@ -919,7 +919,7 @@ export function buildLocalAdvisorReply(
   }
 
   return [
-    "بناءً على بيانات القبول المتوفرة:",
+    "بناءً على بيانات القبول المتوفرة من public/data/final_output.json:",
     "",
     `- المصدر المستخدم: ${getPrimaryDataSourceName()}`,
     ...scoreLines,
