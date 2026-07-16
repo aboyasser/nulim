@@ -86,7 +86,7 @@ const fallbackUniversitiesData: UniversityItem[] = (fallbackUniversitiesDataRaw 
 
   const programs: ProgramItem[] = rawPrograms.map((p: RawProgramItem) => {
     const criteria = p.admission_criteria || {};
-    
+
     // Normalize gender: both -> طلاب وطالبات, female -> طالبات, male -> طلاب
     let gender = p.gender;
     if (gender === "both") {
@@ -157,7 +157,17 @@ const TRAINED_DATA_PATHS = [
   path.join(process.cwd(), "trainedData.md"),
   path.join(process.cwd(), "..", "trainedData.md"),
 ];
-const STRUCTURED_SOURCE = "data/النتائج.json";
+const STRUCTURED_SOURCE = "public/data/final_output.json";
+
+function findFinalOutputPath() {
+  const candidates = [
+    path.join(process.cwd(), "public", "data", "final_output.json"),
+    path.join(process.cwd(), "..", "public", "data", "final_output.json"),
+    path.join(process.cwd(), "nulim", "public", "data", "final_output.json"),
+  ];
+
+  return candidates.find((candidatePath) => existsSync(candidatePath));
+}
 
 function findTrainedDataPath() {
   return TRAINED_DATA_PATHS.find((candidatePath) => existsSync(candidatePath));
@@ -175,7 +185,66 @@ function readTrainedDataMarkdown() {
   };
 }
 
+interface FinalOutputUniversity {
+  id?: string | null;
+  name?: string;
+  city?: string;
+  programs?: Array<{
+    name?: string;
+    college?: string;
+    min_rate?: string | number;
+    formula?: string;
+    gender?: string;
+    degree?: string;
+    location?: string;
+    campus?: string;
+    track?: string;
+    source_excerpt?: string;
+  }>;
+  knowledge_text?: string;
+  requirements?: string[];
+}
+
 export function getUniversitiesData(): UniversityItem[] {
+  const finalOutputPath = findFinalOutputPath();
+
+  if (finalOutputPath) {
+    try {
+      const raw = JSON.parse(readFileSync(finalOutputPath, "utf8")) as FinalOutputUniversity[];
+      const transformed: UniversityItem[] = raw.map((u) => {
+        const uniCity = u.city || undefined;
+        const programs = (u.programs || []).map((p) => ({
+          name: p.name,
+          college: p.college,
+          min_rate: p.min_rate ?? "غير محدد",
+          formula: p.formula ?? "غير محددة",
+          gender: p.gender,
+          degree: p.degree,
+          campus: p.location || p.campus,
+          campus_type: (p.location || p.campus) === uniCity ? "مقر رئيسي" : "فرع",
+          city: p.location || uniCity,
+          region: inferRegion(p.location) || inferRegion(uniCity),
+          track: p.track,
+          source_excerpt: p.source_excerpt || undefined,
+        }));
+
+        return {
+          id: u.id || null,
+          name: u.name || "",
+          city: uniCity,
+          region: inferRegion(uniCity),
+          programs,
+          knowledge_text: u.knowledge_text || "",
+          requirements: u.requirements || [],
+        } as UniversityItem;
+      });
+
+      return transformed;
+    } catch {
+      // If the final output file is unreadable or malformed, fall back to the embedded dataset.
+    }
+  }
+
   return fallbackUniversitiesData as UniversityItem[];
 }
 

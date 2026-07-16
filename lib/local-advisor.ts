@@ -277,7 +277,7 @@ function extractInterest(text: string) {
   // ابحث عن أطول كلمة متطابقة (الأكثر تحديداً)
   let bestMatch: string | undefined = undefined;
   let bestMatchLength = 0;
-  
+
   for (const keyword of INTEREST_KEYWORDS) {
     const normalizedKeyword = normalizeArabic(keyword);
     if (normalized.includes(normalizedKeyword) && normalizedKeyword.length > bestMatchLength) {
@@ -285,7 +285,7 @@ function extractInterest(text: string) {
       bestMatchLength = normalizedKeyword.length;
     }
   }
-  
+
   return bestMatch;
 }
 
@@ -660,6 +660,65 @@ function rankPrograms(
   return selected;
 }
 
+function buildMentionedUniversityFallbackRows(
+  mentionedUniversities: UniversityItem[],
+  query: string,
+  scores: ParsedScores,
+  weighted: number | undefined,
+  equivalent: number | undefined,
+  filters: {
+    requestedGender?: "male" | "female";
+    requestedDegree?: string;
+    requestedLocation?: string;
+    requestedCount?: number;
+  }
+): RankedProgramRow[] {
+  const interest = extractInterest(query);
+  const fallbackRows: RankedProgramRow[] = [];
+
+  for (const university of mentionedUniversities) {
+    const programs = university.programs ?? [];
+    const candidate =
+      programs.find((program) =>
+        programMatchesInterest(program, interest) &&
+        programMatchesGender(program, filters.requestedGender) &&
+        programMatchesDegree(program, filters.requestedDegree) &&
+        programMatchesLocation(program, university, filters.requestedLocation)
+      ) ?? programs[0];
+
+    if (!candidate) {
+      continue;
+    }
+
+    const formula = candidate.formula ?? "";
+    const score = calculateScoreForFormula(formula, scores, weighted, equivalent);
+    const minimum = parseMinimumRate(candidate.min_rate);
+    const competitive = isCompetitiveMinimum(candidate.min_rate);
+    const diff =
+      typeof score === "number" && typeof minimum === "number"
+        ? score - minimum
+        : undefined;
+
+    fallbackRows.push({
+      university: university.name,
+      program: candidate,
+      score,
+      minimum,
+      diff,
+      rankScore:
+        typeof diff === "number"
+          ? diff + 100
+          : competitive && typeof score === "number"
+            ? score - 75 + 100
+            : typeof score === "number"
+              ? score - 90 + 100
+              : 100,
+    });
+  }
+
+  return fallbackRows;
+}
+
 export function buildAdvisorSummary(
   messages: ChatMessage[],
   profile?: UserProfile,
@@ -705,7 +764,7 @@ export function buildAdvisorSummary(
       universities: findMentionedInCustom(line),
     }))
     .filter((item) => item.universities.length > 0);
-  const ranked =
+  const rankedBase =
     universityLines.length > 1
       ? universityLines.flatMap(({ line, universities }) => {
         const lineScores = parseScores(line);
@@ -728,6 +787,20 @@ export function buildAdvisorSummary(
         { requestedGender, requestedDegree, requestedLocation, requestedCount },
         searchData
       );
+
+  const explicitFallbackRows = mentionedUniversities.length > 0
+    ? buildMentionedUniversityFallbackRows(
+      mentionedUniversities,
+      latestUserMessage,
+      scores,
+      weighted,
+      equivalent,
+      { requestedGender, requestedDegree, requestedLocation, requestedCount }
+    )
+    : [];
+
+  const ranked = [...explicitFallbackRows, ...rankedBase.filter((row) => !explicitFallbackRows.some((fallback) => fallback.university === row.university))]
+    .slice(0, requestedCount ?? 6);
   const universityContexts = buildUniversityContexts(latestUserMessage, mentionedUniversities);
   const structuredUniversityNames = searchData
     .filter((university) => (university.programs ?? []).length > 0)
@@ -848,6 +921,7 @@ export function buildLocalAdvisorReply(
   return [
     "بناءً على بيانات القبول المتوفرة:",
     "",
+    `- المصدر المستخدم: ${getPrimaryDataSourceName()}`,
     ...scoreLines,
     "",
     "أفضل الخيارات المطابقة:",
