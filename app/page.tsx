@@ -1,48 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import finalOutput from '@/public/data/final_output.json';
+import { buildDisplayUniversities } from '@/lib/university-links';
 
-const UNIVERSITIES: { name: string; url?: string; badge?: string }[] = [
-  { name: 'جامعة الملك سعود', url: 'https://ksu.edu.sa' },
-  { name: 'جامعة الملك عبدالعزيز', url: 'https://kau.edu.sa' },
-  { name: 'جامعة الإمام محمد بن سعود الإسلامية', url: 'https://imamu.edu.sa' },
-  { name: 'جامعة الأميرة نورة بنت عبدالرحمن', url: 'https://pnu.edu.sa' },
-  { name: 'جامعة الملك خالد', url: 'https://kku.edu.sa' },
-  { name: 'جامعة الطائف', url: 'https://tu.edu.sa' },
-  { name: 'جامعة القصيم', url: 'https://qu.edu.sa' },
-  { name: 'جامعة المجمعة', url: 'https://mu.edu.sa' },
-  { name: 'جامعة تبوك', url: 'https://ut.edu.sa' },
-  { name: 'جامعة الجوف', url: 'https://ju.edu.sa' },
-  { name: 'جامعة حائل', url: 'https://uoh.edu.sa' },
-  { name: 'جامعة الباحة', url: 'https://bu.edu.sa' },
-  { name: 'جامعة بيشة', url: 'https://ub.edu.sa' },
-  { name: 'جامعة شقراء', url: 'https://su.edu.sa' },
-  { name: 'جامعة سطام بن عبدالعزيز', url: 'https://psau.edu.sa' },
-  { name: 'جامعة عبدالرحمن بن فيصل', url: 'https://iau.edu.sa' },
-  { name: 'جامعة جدة', url: 'https://uj.edu.sa' },
-  { name: 'جامعة حفر الباطن', url: 'https://uhb.edu.sa' },
-  { name: 'جامعة الحدود الشمالية', url: 'https://nbu.edu.sa' },
-  {
-    name: 'جامعة الملك سعود بن عبدالعزيز للعلوم الصحية',
-    url: 'https://ksau-hs.edu.sa/Arabic/Pages/Home.aspx',
-  },
-  { name: 'جامعة نجران', url: 'https://portal.nu.edu.sa/ar/home' },
-  { name: 'جامعة الملك فيصل', url: 'https://www.kfu.edu.sa/ar/Pages/Home.aspx' },
-  { name: 'جامعة طيبة', url: 'https://www.taibahu.edu.sa/' },
-  {
-    name: 'الأكاديمية الوطنية للصناعات العسكرية',
-    url: 'https://adi.edu.sa',
-    badge: 'مبتدئ بالتوظيف',
-  },
-];
-
-// Append newly-merged universities from final_output.json that are NOT already in UNIVERSITIES
 const EXTRA_UNIS = (Array.isArray(finalOutput) ? finalOutput : [])
   .filter((u: any) => ['KSAU-HS', 'NU', 'KFU', 'TAIBAH'].includes(u.id))
-  .filter((u: any) => !UNIVERSITIES.find(uni => uni.name === u.name))
   .map((u: any) => ({ name: u.name, url: undefined as undefined, badge: undefined as undefined }));
 
-const DISPLAY_UNIVERSITIES = [...UNIVERSITIES, ...EXTRA_UNIS].filter(u => u.name);
+const DISPLAY_UNIVERSITIES = buildDisplayUniversities(EXTRA_UNIS).filter((u) => u.name);
 
 export default function HomePage() {
   return (
