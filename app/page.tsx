@@ -28,6 +28,7 @@ const UNIVERSITIES: { name: string; url?: string; badge?: string }[] = [
   },
   { name: 'جامعة نجران', url: 'https://portal.nu.edu.sa/ar/home' },
   { name: 'جامعة الملك فيصل', url: 'https://www.kfu.edu.sa/ar/Pages/Home.aspx' },
+  { name: 'جامعة طيبة', url: 'https://www.taibahu.edu.sa/' },
   {
     name: 'الأكاديمية الوطنية للصناعات العسكرية',
     url: 'https://adi.edu.sa',
@@ -37,10 +38,10 @@ const UNIVERSITIES: { name: string; url?: string; badge?: string }[] = [
 
 // Append newly-merged universities from final_output.json (if present)
 const EXTRA_UNIS = (Array.isArray(finalOutput) ? finalOutput : [])
-  .filter((u: any) => ['KSAU-HS', 'NU', 'KFU'].includes(u.id))
+  .filter((u: any) => ['KSAU-HS', 'NU', 'KFU', 'TAIBAH'].includes(u.id))
   .map((u: any) => ({ name: u.name, url: undefined as undefined, badge: undefined as undefined }));
 
-const DISPLAY_UNIVERSITIES = [...UNIVERSITIES].filter(u => u.url);
+const DISPLAY_UNIVERSITIES = [...UNIVERSITIES, ...EXTRA_UNIS].filter(u => u.name);
 
 export default function HomePage() {
   return (
