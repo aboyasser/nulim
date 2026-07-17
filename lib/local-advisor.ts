@@ -604,6 +604,12 @@ function rankPrograms(
             ? score - minimum
             : undefined;
 
+        const chance = chanceLabel(score, minimum);
+        const opportunityBoost =
+          chance === "مرتفعة" ? 20 :
+          chance === "متوسطة" ? 10 :
+          0;
+
         return {
           university: university.name,
           program,
@@ -612,18 +618,18 @@ function rankPrograms(
           diff,
           rankScore:
             typeof diff === "number"
-              ? diff
+              ? diff + opportunityBoost + (typeof score === "number" ? score / 100 : 0)
               : competitive && typeof score === "number"
-                ? score - 75
+                ? score - 75 + opportunityBoost
                 : typeof score === "number"
-                  ? score - 90
+                  ? score - 90 + opportunityBoost
                   : -999,
         };
       })
   );
 
   const sortedRows = rows.sort((a, b) => b.rankScore - a.rankScore);
-  const limit = filters.requestedCount ?? 6;
+  const limit = filters.requestedCount ?? 5;
 
   if (mentionedNames.size === 1) {
     return sortedRows.slice(0, limit);
@@ -675,48 +681,57 @@ function buildMentionedUniversityFallbackRows(
 ): RankedProgramRow[] {
   const interest = extractInterest(query);
   const fallbackRows: RankedProgramRow[] = [];
+  const requestedLimit = filters.requestedCount ?? 5;
+  const perUniversityLimit = Math.max(
+    1,
+    Math.ceil(requestedLimit / Math.max(1, mentionedUniversities.length))
+  );
 
   for (const university of mentionedUniversities) {
     const programs = university.programs ?? [];
-    const candidate =
-      programs.find((program) =>
-        programMatchesInterest(program, interest) &&
-        programMatchesGender(program, filters.requestedGender) &&
-        programMatchesDegree(program, filters.requestedDegree) &&
-        programMatchesLocation(program, university, filters.requestedLocation)
-      ) ?? programs[0];
+    const matchingPrograms = programs.filter((program) =>
+      programMatchesInterest(program, interest) &&
+      programMatchesGender(program, filters.requestedGender) &&
+      programMatchesDegree(program, filters.requestedDegree) &&
+      programMatchesLocation(program, university, filters.requestedLocation)
+    );
+    const candidates = matchingPrograms.length > 0 ? matchingPrograms : programs;
 
-    if (!candidate) {
-      continue;
+    for (const candidate of candidates.slice(0, perUniversityLimit)) {
+      const formula = candidate.formula ?? "";
+      const score = calculateScoreForFormula(formula, scores, weighted, equivalent);
+      const minimum = parseMinimumRate(candidate.min_rate);
+      const competitive = isCompetitiveMinimum(candidate.min_rate);
+      const diff =
+        typeof score === "number" && typeof minimum === "number"
+          ? score - minimum
+          : undefined;
+
+      const chance = chanceLabel(score, minimum);
+      const opportunityBoost =
+        chance === "مرتفعة" ? 20 :
+        chance === "متوسطة" ? 10 :
+        0;
+
+      fallbackRows.push({
+        university: university.name,
+        program: candidate,
+        score,
+        minimum,
+        diff,
+        rankScore:
+          typeof diff === "number"
+            ? diff + 100 + opportunityBoost + (typeof score === "number" ? score / 100 : 0)
+            : competitive && typeof score === "number"
+              ? score - 75 + 100 + opportunityBoost
+              : typeof score === "number"
+                ? score - 90 + 100 + opportunityBoost
+                : 100,
+      });
     }
-
-    const formula = candidate.formula ?? "";
-    const score = calculateScoreForFormula(formula, scores, weighted, equivalent);
-    const minimum = parseMinimumRate(candidate.min_rate);
-    const competitive = isCompetitiveMinimum(candidate.min_rate);
-    const diff =
-      typeof score === "number" && typeof minimum === "number"
-        ? score - minimum
-        : undefined;
-
-    fallbackRows.push({
-      university: university.name,
-      program: candidate,
-      score,
-      minimum,
-      diff,
-      rankScore:
-        typeof diff === "number"
-          ? diff + 100
-          : competitive && typeof score === "number"
-            ? score - 75 + 100
-            : typeof score === "number"
-              ? score - 90 + 100
-              : 100,
-    });
   }
 
-  return fallbackRows;
+  return fallbackRows.sort((a, b) => b.rankScore - a.rankScore).slice(0, requestedLimit);
 }
 
 export function buildAdvisorSummary(
@@ -776,7 +791,7 @@ export function buildAdvisorSummary(
           universities,
           { requestedGender, requestedDegree, requestedLocation, requestedCount },
           searchData
-        ).slice(0, requestedCount ?? 3);
+        ).slice(0, requestedCount ?? 5);
       })
       : rankPrograms(
         latestUserMessage,
@@ -800,7 +815,7 @@ export function buildAdvisorSummary(
     : [];
 
   const ranked = [...explicitFallbackRows, ...rankedBase.filter((row) => !explicitFallbackRows.some((fallback) => fallback.university === row.university))]
-    .slice(0, requestedCount ?? 6);
+    .slice(0, requestedCount ?? 5);
   const universityContexts = buildUniversityContexts(latestUserMessage, mentionedUniversities);
   const structuredUniversityNames = searchData
     .filter((university) => (university.programs ?? []).length > 0)
@@ -919,9 +934,8 @@ export function buildLocalAdvisorReply(
   }
 
   return [
-    "بناءً على بيانات القبول المتوفرة من public/data/final_output.json:",
+    "بناءً على بيانات القبول المتوفرة:",
     "",
-    `- المصدر المستخدم: ${getPrimaryDataSourceName()}`,
     ...scoreLines,
     "",
     "أفضل الخيارات المطابقة:",
