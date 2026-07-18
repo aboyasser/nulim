@@ -74,6 +74,12 @@ const INTEREST_KEYWORDS = [
   // عبارات مركبة — يجب أن تأتي أولاً (الأطول والأكثر تحديداً)
   "الأكاديمية الوطنية للصناعات العسكرية",
   "صناعات عسكرية",
+  "دفاع جوي",
+  "مراقبة جوية",
+  "طائرة مسيرة",
+  "أنظمة التسليح",
+  "انظمة التسليح",
+  "توجيه المقاتلات",
   "نظم المعلومات الإدارية",
   "نظم المعلومات",
   "نظم معلومات",
@@ -104,6 +110,13 @@ const INTEREST_KEYWORDS = [
   "عسكري",
   "عسكرية",
   "عسكر",
+  "طيار",
+  "طيران",
+  "جوية",
+  "بحرية",
+  "حربية",
+  "إمداد",
+  "امداد",
   "طب",
   "صحي",
   "الجراحة",
@@ -144,6 +157,19 @@ const REGION_ALIASES: Record<string, string[]> = {
   "المنطقة الشرقية": ["الشرقية", "الدمام", "الخبر", "الأحساء", "الاحساء", "حفر الباطن"],
   "المنطقة الشمالية": ["الشمالية", "تبوك", "الجوف", "عرعر", "رفحاء", "طريف", "حائل"],
   "المنطقة الجنوبية": ["الجنوبية", "أبها", "ابها", "الباحة", "بيشة", "عسير", "نجران"],
+};
+
+const UNIVERSITY_ALIASES: Record<string, string[]> = {
+  UQU: ["أم القرى", "ام القرى", "جامعة أم القرى", "جامعة ام القرى"],
+  KSAU_HS: [
+    "جامعة الملك سعود بن عبدالعزيز للعلوم الصحية",
+    "العلوم الصحية",
+    "الحرس",
+  ],
+  KSU: ["جامعة الملك سعود", "الملك سعود"],
+  KAU: ["جامعة الملك عبدالعزيز", "الملك عبدالعزيز"],
+  IMSIU: ["جامعة الإمام محمد بن سعود", "جامعة الامام محمد بن سعود", "الإمام", "الامام"],
+  PSAU: ["جامعة الأمير سطام", "جامعة الامير سطام", "جامعة سطام", "سطام"],
 };
 
 const SIGNAL_LINE_REGEX =
@@ -246,10 +272,33 @@ function calculateScoreForFormula(
   const secondaryWeight = extractFormulaWeight(formula, "ثانوية");
   const qiyasWeight = extractFormulaWeight(formula, "قدرات");
   const tahsiliWeight = extractFormulaWeight(formula, "تحصيلي");
+  const declaredWeightSum =
+    (secondaryWeight ?? 0) + (qiyasWeight ?? 0) + (tahsiliWeight ?? 0);
+
+  if (declaredWeightSum > 1.05) {
+    const minimum = parseMinimumRate(formula);
+    const requirementMargins = [
+      typeof secondaryWeight === "number" && typeof scores.secondary === "number"
+        ? scores.secondary - (secondaryWeight * 100)
+        : undefined,
+      typeof qiyasWeight === "number" && typeof scores.qiyas === "number"
+        ? scores.qiyas - (qiyasWeight * 100)
+        : undefined,
+      typeof tahsiliWeight === "number" && typeof scores.tahsili === "number"
+        ? scores.tahsili - (tahsiliWeight * 100)
+        : undefined,
+    ].filter((margin): margin is number => typeof margin === "number");
+
+    if (typeof minimum === "number" && requirementMargins.length > 0) {
+      return Number((minimum + Math.min(...requirementMargins)).toFixed(2));
+    }
+  }
 
   if (
     typeof secondaryWeight === "number" &&
     typeof qiyasWeight === "number" &&
+    declaredWeightSum > 0 &&
+    declaredWeightSum <= 1.05 &&
     typeof scores.secondary === "number" &&
     typeof scores.qiyas === "number" &&
     (typeof tahsiliWeight !== "number" || typeof scores.tahsili === "number")
@@ -309,6 +358,19 @@ function removeUniversityWord(text: string) {
     .trim();
 }
 
+function normalizeUniversityId(id: string | null | undefined) {
+  if (id === "KSAU-HS") {
+    return "KSAU_HS";
+  }
+  if (id === "IMU") {
+    return "IMSIU";
+  }
+  if (id === "شروط القبول_جامعة_سطام") {
+    return "PSAU";
+  }
+  return id ?? "";
+}
+
 function parseMinimumRate(minRate: string | number | undefined) {
   if (typeof minRate === "number") {
     return minRate;
@@ -324,7 +386,11 @@ function isCompetitiveMinimum(minRate: string | number | undefined) {
   );
 }
 
-function programMatchesInterest(program: ProgramItem, interest: string | undefined) {
+function programMatchesInterest(
+  program: ProgramItem,
+  interest: string | undefined,
+  university?: UniversityItem
+) {
   if (!interest) {
     return true;
   }
@@ -333,18 +399,56 @@ function programMatchesInterest(program: ProgramItem, interest: string | undefin
     return true;
   }
 
-  const programText = [program.name, program.college].filter(Boolean).join(" ");
+  const programText = [university?.name, program.name, program.college, program.campus, program.city, program.track]
+    .filter(Boolean)
+    .join(" ");
   const normalizedText = normalizeArabic(programText);
   const normalizedInterest = normalizeArabic(interest).replace(/^ال/, "");
   const tokens = tokenizeNormalized(programText);
+  const strippedText = normalizedText
+    .split(" ")
+    .map(stripArabicPrefix)
+    .join(" ");
+
+  if (normalizedInterest === "صناعات عسكريه") {
+    return (
+      normalizedText.includes("صناعات عسكريه") ||
+      strippedText.includes("صناعات عسكريه") ||
+      normalizedText.includes("انظمه دفاعيه") ||
+      normalizedText.includes("تقنيه التصنيع") ||
+      normalizedText.includes("خطوط الانتاج")
+    );
+  }
+
+  if (normalizedInterest === "دفاع جوي") {
+    return normalizedText.includes("دفاع جوي") || strippedText.includes("دفاع جوي");
+  }
+
+  if (normalizedInterest === "مراقبه جويه") {
+    return normalizedText.includes("مراقبه جويه") || strippedText.includes("مراقبه جويه");
+  }
+
+  if (normalizedInterest === "طائره مسيره") {
+    return normalizedText.includes("طائره مسيره") || strippedText.includes("طائره مسيره");
+  }
+
+  if (["انظمه التسليح", "توجيه المقاتلات"].includes(normalizedInterest)) {
+    return normalizedText.includes(normalizedInterest) || strippedText.includes(normalizedInterest);
+  }
+
+  if (["عسكري", "عسكريه", "عسكر"].includes(normalizedInterest)) {
+    return (
+      normalizedText.includes("عسكري") ||
+      normalizedText.includes("دفاع") ||
+      normalizedText.includes("الحرس الوطني") ||
+      normalizedText.includes("صناعات عسكريه") ||
+      normalizedText.includes("انظمه دفاعيه")
+    );
+  }
 
   // مطابقة العبارات المركبة كاملاً أولاً (الأولوية للأكثر تحديداً)
   if (normalizedInterest.includes(" ")) {
     // مطابقة مباشرة أو بعد تجريد بادئات «ال» من كل كلمة في النص
-    const strippedText = normalizedText
-      .split(" ")
-      .map(stripArabicPrefix)
-      .join(" ");
     if (normalizedText.includes(normalizedInterest) || strippedText.includes(normalizedInterest)) {
       return true;
     }
@@ -492,6 +596,48 @@ function chanceLabel(score: number | undefined, minimum: number | undefined) {
   return "منخفضة";
 }
 
+function unknownMinimumFitScore(program: ProgramItem, score: number | undefined, interest: string | undefined) {
+  if (typeof score !== "number") {
+    return -999;
+  }
+
+  const normalizedText = normalizeArabic(
+    [program.name, program.college, program.campus, program.city, program.track, program.degree]
+      .filter(Boolean)
+      .join(" ")
+  );
+  const tokens = tokenizeNormalized(normalizedText);
+  const hasAnyToken = (needles: string[]) =>
+    tokens.some((token) => needles.some((needle) => token === needle || token.startsWith(needle)));
+  let fitScore = score - 90;
+
+  if (normalizeArabic(program.degree ?? "").includes("دبلوم")) {
+    fitScore += 28;
+  }
+
+  if (/اداري|اداره|اعمال|محاسب|تسويق|لوجستي|سياح|فندقي|انساني|ادبي|نظري|شريعه|انظمه|قانون|لغه|اعلام|خدمه اجتماعيه|تاريخ|دعوه|عقيده/.test(normalizedText)) {
+    fitScore += 16;
+  }
+
+  if (hasAnyToken(["حاسب", "برمج", "بيانات", "ذكاء", "سيبراني", "معلومات", "تقنيه"])) {
+    fitScore += 4;
+  }
+
+  if (hasAnyToken(["هندس", "عماره", "تخطيط", "ميكاترونكس", "كهرب", "ميكانيك", "مدني", "صناعي", "تشييد"])) {
+    fitScore -= 20;
+  }
+
+  if (hasAnyToken(["طب", "جراح", "اسنان", "صيدل", "تمريض", "قباله", "مختبر", "علاج", "اشعه", "تنفسي", "صحي", "صحه", "وبائ", "تغذيه", "بصريات", "طوارئ"])) {
+    fitScore -= 42;
+  }
+
+  if (interest) {
+    fitScore += 18;
+  }
+
+  return fitScore;
+}
+
 type RankedProgramRow = {
   university: string;
   program: ProgramItem;
@@ -590,7 +736,7 @@ function rankPrograms(
 
   const rows: RankedProgramRow[] = universities.flatMap((university) =>
     (university.programs ?? [])
-      .filter((program) => programMatchesInterest(program, interest))
+      .filter((program) => programMatchesInterest(program, interest, university))
       .filter((program) => programMatchesGender(program, filters.requestedGender))
       .filter((program) => programMatchesDegree(program, filters.requestedDegree))
       .filter((program) => programMatchesLocation(program, university, filters.requestedLocation))
@@ -607,8 +753,8 @@ function rankPrograms(
         const chance = chanceLabel(score, minimum);
         const opportunityBoost =
           chance === "مرتفعة" ? 20 :
-          chance === "متوسطة" ? 10 :
-          0;
+            chance === "متوسطة" ? 10 :
+              0;
 
         return {
           university: university.name,
@@ -621,9 +767,7 @@ function rankPrograms(
               ? diff + opportunityBoost + (typeof score === "number" ? score / 100 : 0)
               : competitive && typeof score === "number"
                 ? score - 75 + opportunityBoost
-                : typeof score === "number"
-                  ? score - 90 + opportunityBoost
-                  : -999,
+                : unknownMinimumFitScore(program, score, interest) + opportunityBoost,
         };
       })
   );
@@ -690,14 +834,13 @@ function buildMentionedUniversityFallbackRows(
   for (const university of mentionedUniversities) {
     const programs = university.programs ?? [];
     const matchingPrograms = programs.filter((program) =>
-      programMatchesInterest(program, interest) &&
+      programMatchesInterest(program, interest, university) &&
       programMatchesGender(program, filters.requestedGender) &&
       programMatchesDegree(program, filters.requestedDegree) &&
       programMatchesLocation(program, university, filters.requestedLocation)
     );
     const candidates = matchingPrograms.length > 0 ? matchingPrograms : programs;
-
-    for (const candidate of candidates.slice(0, perUniversityLimit)) {
+    const candidateRows = candidates.map((candidate) => {
       const formula = candidate.formula ?? "";
       const score = calculateScoreForFormula(formula, scores, weighted, equivalent);
       const minimum = parseMinimumRate(candidate.min_rate);
@@ -710,10 +853,10 @@ function buildMentionedUniversityFallbackRows(
       const chance = chanceLabel(score, minimum);
       const opportunityBoost =
         chance === "مرتفعة" ? 20 :
-        chance === "متوسطة" ? 10 :
-        0;
+          chance === "متوسطة" ? 10 :
+            0;
 
-      fallbackRows.push({
+      return {
         university: university.name,
         program: candidate,
         score,
@@ -724,11 +867,15 @@ function buildMentionedUniversityFallbackRows(
             ? diff + 100 + opportunityBoost + (typeof score === "number" ? score / 100 : 0)
             : competitive && typeof score === "number"
               ? score - 75 + 100 + opportunityBoost
-              : typeof score === "number"
-                ? score - 90 + 100 + opportunityBoost
-                : 100,
-      });
-    }
+              : unknownMinimumFitScore(candidate, score, interest) + 100 + opportunityBoost,
+      };
+    });
+
+    fallbackRows.push(
+      ...candidateRows
+        .sort((a, b) => b.rankScore - a.rankScore)
+        .slice(0, perUniversityLimit)
+    );
   }
 
   return fallbackRows.sort((a, b) => b.rankScore - a.rankScore).slice(0, requestedLimit);
@@ -757,8 +904,20 @@ export function buildAdvisorSummary(
     return searchData.filter((university) => {
       const normalizedName = normalizeArabic(university.name);
       const nameWithoutUniversity = removeUniversityWord(university.name);
+      const aliases = UNIVERSITY_ALIASES[normalizeUniversityId(university.id)] ?? [];
+      const hasAlias = aliases.some((alias) => {
+        const normalizedAlias = normalizeArabic(alias);
+        const aliasWithoutUniversity = removeUniversityWord(alias);
+
+        return (
+          normalizedQuery.includes(normalizedAlias) ||
+          (aliasWithoutUniversity.length >= 3 &&
+            queryWithoutUniversity.includes(aliasWithoutUniversity))
+        );
+      });
 
       return (
+        hasAlias ||
         normalizedQuery.includes(normalizedName) ||
         (nameWithoutUniversity.length >= 3 &&
           queryWithoutUniversity.includes(nameWithoutUniversity))
@@ -814,7 +973,12 @@ export function buildAdvisorSummary(
     )
     : [];
 
-  const ranked = [...explicitFallbackRows, ...rankedBase.filter((row) => !explicitFallbackRows.some((fallback) => fallback.university === row.university))]
+  const scopedRankedBase = mentionedUniversities.length > 0
+    ? rankedBase.filter((row) =>
+      mentionedUniversities.some((university) => university.name === row.university)
+    )
+    : rankedBase;
+  const ranked = [...explicitFallbackRows, ...scopedRankedBase.filter((row) => !explicitFallbackRows.some((fallback) => fallback.university === row.university))]
     .slice(0, requestedCount ?? 5);
   const universityContexts = buildUniversityContexts(latestUserMessage, mentionedUniversities);
   const structuredUniversityNames = searchData
@@ -898,9 +1062,19 @@ export function buildLocalAdvisorReply(
   const hasKnownChance = recommendations.some(
     (recommendation) => recommendation.chance !== "غير محددة"
   );
-  const advice = hasKnownChance
+  const hasHighChance = recommendations.some(
+    (recommendation) => recommendation.chance === "مرتفعة"
+  );
+  const hasMediumChance = recommendations.some(
+    (recommendation) => recommendation.chance === "متوسطة"
+  );
+  const advice = hasHighChance
     ? "نصيحتي: ابدأ بالخيارات ذات الفرصة المرتفعة، ثم أضف خيارين متوسطين كخطة احتياطية. تأكد من الجنس والمسار وشروط الجامعة وقت التقديم لأن بعض التفاصيل تتغير سنوياً."
-    : "نصيحتي: لأن الحد المذكور تنافسي أو غير محدد رقمياً، استخدم هذه الخيارات كقائمة مناسبة مبدئياً، ثم راجع شروط الجامعة والمقاعد المتاحة وقت التقديم.";
+    : hasMediumChance
+      ? "نصيحتي: ابدأ بالخيارات المتوسطة كخطة قابلة للمراجعة، وأضف خيارات أكثر أماناً إن توفرت. تأكد من الجنس والمسار وشروط الجامعة وقت التقديم لأن بعض التفاصيل تتغير سنوياً."
+      : hasKnownChance
+        ? "نصيحتي: النتائج الحالية منخفضة حسب الحدود الرقمية المتوفرة، فاجعلها رغبات طموح وأضف خيارات أكثر أماناً."
+        : "نصيحتي: لأن الحد المذكور تنافسي أو غير محدد رقمياً، استخدم هذه الخيارات كقائمة مناسبة مبدئياً، ثم راجع شروط الجامعة والمقاعد المتاحة وقت التقديم.";
 
   if (recommendations.length === 0 && summary.universityContexts.length > 0) {
     const context = summary.universityContexts[0];

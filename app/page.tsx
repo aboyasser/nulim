@@ -3,9 +3,32 @@ import Image from 'next/image';
 import finalOutput from '@/public/data/final_output.json';
 import { buildDisplayUniversities } from '@/lib/university-links';
 
-const EXTRA_UNIS = (Array.isArray(finalOutput) ? finalOutput : [])
-  .filter((u: any) => ['KSAU-HS', 'NU', 'KFU', 'TAIBAH'].includes(u.id))
-  .map((u: any) => ({ name: u.name, url: undefined as undefined, badge: undefined as undefined }));
+type FinalOutputUniversity = {
+  id?: string | null;
+  name?: string;
+  type?: string;
+};
+
+type DisplayUniversityInput = {
+  name: string;
+  url?: string;
+  badge?: string;
+};
+
+const FINAL_OUTPUT_UNIVERSITIES: FinalOutputUniversity[] = Array.isArray(finalOutput) ? finalOutput : [];
+const MILITARY_INSTITUTION_TYPES = new Set(['military', 'training_employment']);
+const EDUCATIONAL_INSTITUTIONS_COUNT = FINAL_OUTPUT_UNIVERSITIES.filter(
+  (u) => !MILITARY_INSTITUTION_TYPES.has(u.type ?? '')
+).length;
+const MILITARY_INSTITUTIONS_COUNT = FINAL_OUTPUT_UNIVERSITIES.filter(
+  (u) => MILITARY_INSTITUTION_TYPES.has(u.type ?? '')
+).length;
+
+const EXTRA_UNIS = FINAL_OUTPUT_UNIVERSITIES
+  .filter((u: FinalOutputUniversity) => ['KSAU-HS', 'NU', 'KFU', 'TAIBAH', 'UQU', 'MOD', 'KKMC'].includes(u.id ?? ''))
+  .flatMap((u: FinalOutputUniversity): DisplayUniversityInput[] =>
+    u.name ? [{ name: u.name }] : []
+  );
 
 const DISPLAY_UNIVERSITIES = buildDisplayUniversities(EXTRA_UNIS).filter((u) => u.name);
 
@@ -96,7 +119,7 @@ export default function HomePage() {
                 {' '}— تأكد من متابعة المواعيد والشروط المعتمدة هناك.
               </p>
               <p className="text-amber-300/70 text-xs">
-                آخر تحديث لبيانات الشروط: <strong>25 / 11 / 1447 هـ</strong>
+                آخر تحديث لبيانات الشروط: <strong>04 / 02 / 1448 هـ</strong>
               </p>
             </div>
           </div>
@@ -161,42 +184,42 @@ export default function HomePage() {
 
                 {/* Stage 2 */}
                 <div className="relative pr-6">
-                  <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-teal-400 ring-4 ring-teal-950 animate-pulse" />
+                  <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-slate-600 ring-4 ring-slate-900" />
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold text-teal-300">التقديم على الابتعاث الخارجي</span>
-                    <span className="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] text-teal-400 font-medium">نشط حالياً (7 يونيو - 10 يوليو)</span>
+                    <span className="text-xs font-semibold text-slate-400 line-through">التقديم على الابتعاث الخارجي</span>
+                    <span className="rounded bg-slate-800/80 px-1.5 py-0.5 text-[10px] text-slate-500">منتهي (10 يوليو)</span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">التقديم متاح لمسارات (إمداد، الرواد، واعد) للجامعات العالمية.</p>
+                  <p className="mt-1 text-xs text-slate-500">كان التقديم متاحاً لمسارات (إمداد، الرواد، واعد) للجامعات العالمية.</p>
                 </div>
 
                 {/* Stage 3 */}
                 <div className="relative pr-6">
-                  <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-teal-400 ring-4 ring-teal-950 animate-pulse" />
+                  <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-slate-600 ring-4 ring-slate-900" />
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold text-teal-300">فترة المقابلات واختبارات القبول</span>
-                    <span className="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] text-teal-400 font-medium">مستمر حتى 12 يوليو</span>
+                    <span className="text-xs font-semibold text-slate-400 line-through">فترة المقابلات واختبارات القبول</span>
+                    <span className="rounded bg-slate-800/80 px-1.5 py-0.5 text-[10px] text-slate-500">منتهي (12 يوليو)</span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">آخر موعد لإدخال الرغبات المشروطة بمقابلة هو 7 يوليو.</p>
+                  <p className="mt-1 text-xs text-slate-500">كان آخر موعد لإدخال الرغبات المشروطة بمقابلة هو 7 يوليو.</p>
                 </div>
 
                 {/* Stage 4 */}
                 <div className="relative pr-6">
-                  <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-950" />
+                  <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-slate-600 ring-4 ring-slate-900" />
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold text-emerald-400">إدخال وترتيب الرغبات الجامعية</span>
-                    <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-400 font-medium">مستمر حتى 24 يونيو</span>
+                    <span className="text-xs font-semibold text-slate-400 line-through">إدخال وترتيب الرغبات الجامعية</span>
+                    <span className="rounded bg-slate-800/80 px-1.5 py-0.5 text-[10px] text-slate-500">منتهي (24 يونيو)</span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">أدخل ورتّب رغباتك للقبول الموحد قبل إغلاق البوابة نهائياً.</p>
+                  <p className="mt-1 text-xs text-slate-500">انتهت فترة إدخال وترتيب الرغبات للقبول الموحد.</p>
                 </div>
 
                 {/* Stage 5 */}
                 <div className="relative pr-6">
-                  <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-amber-500 ring-4 ring-amber-950" />
+                  <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-slate-600 ring-4 ring-slate-900" />
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold text-amber-400">رصد درجات الثانوية آلياً</span>
-                    <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-300">رصد تلقائي (26 - 27 يونيو)</span>
+                    <span className="text-xs font-semibold text-slate-400 line-through">رصد درجات الثانوية آلياً</span>
+                    <span className="rounded bg-slate-800/80 px-1.5 py-0.5 text-[10px] text-slate-500">منتهي (27 يونيو)</span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-400">يتم رصد وسحب الدرجات تلقائياً بالتكامل مع نظام نور.</p>
+                  <p className="mt-1 text-xs text-slate-500">تم رصد وسحب الدرجات تلقائياً بالتكامل مع نظام نور.</p>
                 </div>
 
                 {/* Stage 6 */}
@@ -204,7 +227,7 @@ export default function HomePage() {
                   <div className="absolute -right-[5px] top-1.5 h-2 w-2 rounded-full bg-blue-500 ring-4 ring-blue-950" />
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-semibold text-blue-400">إعلان فرص القبول والفرز النهائي</span>
-                    <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] text-blue-300">النتائج وتأكيد المقاعد (28 يونيو - 18 يوليو)</span>
+                    <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] text-blue-300">ينتهي اليوم (18 يوليو)</span>
                   </div>
                   <p className="mt-1 text-xs text-slate-400">إعلان النتائج النهائية وتأكيد ترشيح المقاعد أو الاستفسار عن المقاعد الشاغرة.</p>
                 </div>
@@ -236,11 +259,14 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-white">الجامعات المشمولة بالبيانات</h2>
               <p className="mt-1 text-sm text-slate-400">
                 يشمل النظام حالياً بيانات قبول{' '}
-                <span className="font-semibold text-teal-300">{DISPLAY_UNIVERSITIES.length} مؤسسة</span> تعليمية سعودية.
+                <span className="font-semibold text-teal-300">{EDUCATIONAL_INSTITUTIONS_COUNT} مؤسسة تعليمية</span>
+                {' '}و{' '}
+                <span className="font-semibold text-teal-300">{MILITARY_INSTITUTIONS_COUNT} مؤسسة عسكرية</span>
+                {' '}سعودية.
               </p>
             </div>
             <span className="rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold text-teal-300">
-              آخر تحديث: 25/11/1447 هـ
+              آخر تحديث: 04/02/1448 هـ
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -300,7 +326,7 @@ export default function HomePage() {
             <div className="rounded-2xl bg-slate-950/60 p-5 border border-slate-850">
               <h3 className="text-base font-semibold text-teal-300 mb-2">ما هي الجامعات والكليات المشمولة في منصة نلم؟</h3>
               <p className="text-sm text-slate-300 leading-6">
-                تشمل المنصة بيانات أكثر من 21 مؤسسة تعليمية حكومية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف.
+                تشمل المنصة بيانات {EDUCATIONAL_INSTITUTIONS_COUNT} مؤسسة تعليمية و{MILITARY_INSTITUTIONS_COUNT} مؤسسة عسكرية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف.
               </p>
             </div>
           </div>
@@ -342,8 +368,8 @@ export default function HomePage() {
                   "@type": "Question",
                   "name": "ما هي الجامعات والكليات المشمولة في منصة نلم؟",
                   "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "تشمل المنصة بيانات أكثر من 21 مؤسسة تعليمية حكومية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف."
+                  "@type": "Answer",
+                    "text": `تشمل المنصة بيانات ${EDUCATIONAL_INSTITUTIONS_COUNT} مؤسسة تعليمية و${MILITARY_INSTITUTIONS_COUNT} مؤسسة عسكرية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف.`
                   }
                 }
               ]
