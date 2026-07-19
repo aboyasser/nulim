@@ -259,9 +259,13 @@ export default function HomePage() {
               <h2 className="text-xl font-semibold text-white">الجامعات المشمولة بالبيانات</h2>
               <p className="mt-1 text-sm text-slate-400">
                 يشمل النظام حالياً بيانات قبول{' '}
-                <span className="font-semibold text-teal-300">{EDUCATIONAL_INSTITUTIONS_COUNT} مؤسسة تعليمية</span>
+                <span aria-hidden="true">🏛️ </span>
+                <span className="font-bold text-teal-300">{EDUCATIONAL_INSTITUTIONS_COUNT}</span>
+                {' '}مؤسسة تعليمية
                 {' '}و{' '}
-                <span className="font-semibold text-teal-300">{MILITARY_INSTITUTIONS_COUNT} مؤسسة عسكرية</span>
+                <span aria-hidden="true">🛡️ </span>
+                <span className="font-bold text-teal-300">{MILITARY_INSTITUTIONS_COUNT}</span>
+                {' '}مؤسسات عسكرية
                 {' '}سعودية.
               </p>
             </div>
@@ -326,7 +330,7 @@ export default function HomePage() {
             <div className="rounded-2xl bg-slate-950/60 p-5 border border-slate-850">
               <h3 className="text-base font-semibold text-teal-300 mb-2">ما هي الجامعات والكليات المشمولة في منصة نلم؟</h3>
               <p className="text-sm text-slate-300 leading-6">
-                تشمل المنصة بيانات {EDUCATIONAL_INSTITUTIONS_COUNT} مؤسسة تعليمية و{MILITARY_INSTITUTIONS_COUNT} مؤسسة عسكرية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف.
+                تشمل المنصة بيانات {EDUCATIONAL_INSTITUTIONS_COUNT} مؤسسة تعليمية و{MILITARY_INSTITUTIONS_COUNT} مؤسسات عسكرية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف.
               </p>
             </div>
           </div>
@@ -369,7 +373,7 @@ export default function HomePage() {
                   "name": "ما هي الجامعات والكليات المشمولة في منصة نلم؟",
                   "acceptedAnswer": {
                   "@type": "Answer",
-                    "text": `تشمل المنصة بيانات ${EDUCATIONAL_INSTITUTIONS_COUNT} مؤسسة تعليمية و${MILITARY_INSTITUTIONS_COUNT} مؤسسة عسكرية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف.`
+                    "text": `تشمل المنصة بيانات ${EDUCATIONAL_INSTITUTIONS_COUNT} مؤسسة تعليمية و${MILITARY_INSTITUTIONS_COUNT} مؤسسات عسكرية سعودية، بما في ذلك الجامعات المدنية الكبرى والكليات العسكرية التابعة لوزارة الدفاع والحرس الوطني، بالإضافة إلى برامج التدريب المنتهي بالتوظيف.`
                   }
                 }
               ]
