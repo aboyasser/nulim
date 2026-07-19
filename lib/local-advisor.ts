@@ -178,6 +178,7 @@ const UNIVERSITY_ALIASES: Record<string, string[]> = {
     "إسلامية المدينة",
     "اسلامية المدينة",
   ],
+  JAZAN: ["جامعة جازان", "جامعة جيزان", "جازان", "جيزان"],
 };
 
 const SIGNAL_LINE_REGEX =
