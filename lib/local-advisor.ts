@@ -90,6 +90,9 @@ const INTEREST_KEYWORDS = [
   "أمن سيبراني",
   "ذكاء اصطناعي",
   "تعلم آلي",
+  "اللغة الإنجليزية",
+  "لغة إنجليزية",
+  "لغة انجليزية",
   // التخصصات الطبية المحددة
   "أسنان",
   "عيون",
@@ -139,6 +142,10 @@ const INTEREST_KEYWORDS = [
   "أعمال",
   "اعمال",
   "لغات",
+  "انجليزي",
+  "إنجليزي",
+  "الانجليزية",
+  "الإنجليزية",
   "تربية",
   "علوم",
   "علاج",
@@ -253,6 +260,11 @@ function parseRequestedLocation(text: string) {
   return undefined;
 }
 
+function hasExplicitLocationCue(text: string) {
+  const normalized = normalizeArabic(text);
+  return /(^|\s)(في|ب|بال|قريب|قريبه|حول|منطقه|المنطقه|مقر|المقر|فرع|فروع)(\s|$)/.test(normalized);
+}
+
 function parseRequestedCount(text: string) {
   const match = text.match(/(?:رتب|اعطني|أعطني|ابي|أبي|ابغى|اريد|أريد)?\D{0,12}(\d{1,2})\s*(?:رغبات|رغبه|رغبة|خيارات|خيار)/);
   if (!match) {
@@ -330,7 +342,7 @@ function calculateScoreForFormula(
 
 // normalizeArabic is now imported from @/lib/utils
 
-function extractInterest(text: string) {
+function extractInterest(text: string, universities: UniversityItem[] = []) {
   const normalized = normalizeArabic(text);
   // ابحث عن أطول كلمة متطابقة (الأكثر تحديداً)
   let bestMatch: string | undefined = undefined;
@@ -344,7 +356,54 @@ function extractInterest(text: string) {
     }
   }
 
-  return bestMatch;
+  if (bestMatch) {
+    return bestMatch;
+  }
+
+  // Discover new programme names directly from the structured admission data.
+  const programmeNames = [...new Set(
+    universities.flatMap((university) =>
+      (university.programs ?? [])
+        .map((program) => program.name)
+        .filter((name): name is string => Boolean(name && normalizeArabic(name).length >= 3))
+    )
+  )].sort((a, b) => normalizeArabic(b).length - normalizeArabic(a).length);
+
+  const exactProgramme = programmeNames.find((name) => normalized.includes(normalizeArabic(name)));
+  if (exactProgramme) {
+    return exactProgramme;
+  }
+
+  // Keep an unknown but explicit specialty as a hard filter as well. This
+  // prevents a request such as «اقتصاد جامعة شقراء» from becoming a generic
+  // list of unrelated programmes.
+  const ignoredTokens = new Set([
+    "انا", "اريد", "ابغى", "ابي", "بغيت", "نسبتي", "نسبه", "الثانويه", "ثانويه",
+    "قدرات", "قدراتي", "القدرات", "تحصيلي", "التحصيلي", "موزونه", "مكافئه", "درجه", "درجات",
+    "تقريبيه", "انجليزي", "انجليزيه", "جامعه",
+    "الجامعه", "تخصص", "تخصصات", "برنامج", "برامج", "رغبه", "رغبات", "خيار", "خيارات",
+    "طالبه", "طالب", "طلاب", "طالبات", "بكالوريوس", "دبلوم", "في", "من", "الى", "و",
+  ]);
+  const knownContextTokens = new Set(
+    universities.flatMap((university) => [
+      university.name,
+      university.city,
+      university.region,
+      ...(university.programs ?? []).flatMap((program) => [
+        program.city,
+        program.campus,
+        program.region,
+      ]),
+    ]).filter(Boolean).flatMap((value) => tokenizeNormalized(value as string))
+  );
+  const residualTokens = tokenizeNormalized(text).filter(
+    (token) =>
+      !ignoredTokens.has(token) &&
+      !knownContextTokens.has(token) &&
+      !/^\d+(?:\.\d+)?$/.test(token)
+  );
+
+  return residualTokens.sort((a, b) => b.length - a.length)[0];
 }
 
 /** يجرد بادئات حروف الجر العربية المركبة (لل، بال، وال…) ثم «ال» التعريف */
@@ -452,6 +511,15 @@ function programMatchesInterest(
       normalizedText.includes("الحرس الوطني") ||
       normalizedText.includes("صناعات عسكريه") ||
       normalizedText.includes("انظمه دفاعيه")
+    );
+  }
+
+  if (["لغه انجليزيه", "انجليزي", "انجليزيه"].includes(normalizedInterest)) {
+    return (
+      normalizedText.includes("لغه انجليزيه") ||
+      strippedText.includes("لغه انجليزيه") ||
+      tokens.includes("انجليزي") ||
+      tokens.includes("انجليزيه")
     );
   }
 
@@ -735,13 +803,13 @@ function rankPrograms(
   } = {},
   allUniversitiesData?: UniversityItem[]
 ) {
-  const interest = extractInterest(query);
   const mentionedNames = new Set(mentionedUniversities.map((university) => university.name));
   const universities = mentionedNames.size > 0
     ? (allUniversitiesData || (UNIVERSITIES_DATA as UniversityItem[])).filter(
       (university) => mentionedNames.has(university.name)
     )
     : (allUniversitiesData || (UNIVERSITIES_DATA as UniversityItem[]));
+  const interest = extractInterest(query, universities);
 
   const rows: RankedProgramRow[] = universities.flatMap((university) =>
     (university.programs ?? [])
@@ -832,7 +900,7 @@ function buildMentionedUniversityFallbackRows(
     requestedCount?: number;
   }
 ): RankedProgramRow[] {
-  const interest = extractInterest(query);
+  const interest = extractInterest(query, mentionedUniversities);
   const fallbackRows: RankedProgramRow[] = [];
   const requestedLimit = filters.requestedCount ?? 5;
   const perUniversityLimit = Math.max(
@@ -848,7 +916,8 @@ function buildMentionedUniversityFallbackRows(
       programMatchesDegree(program, filters.requestedDegree) &&
       programMatchesLocation(program, university, filters.requestedLocation)
     );
-    const candidates = matchingPrograms.length > 0 ? matchingPrograms : programs;
+    // An explicit interest is a hard filter; do not substitute unrelated programmes.
+    const candidates = interest ? matchingPrograms : programs;
     const candidateRows = candidates.map((candidate) => {
       const formula = candidate.formula ?? "";
       const score = calculateScoreForFormula(formula, scores, weighted, equivalent);
@@ -902,7 +971,7 @@ export function buildAdvisorSummary(
   const equivalent = calculateEquivalent(scores);
   const requestedGender = parseGender(latestUserMessage, profile?.gender);
   const requestedDegree = parseDegree(latestUserMessage);
-  const requestedLocation = parseRequestedLocation(latestUserMessage);
+  let requestedLocation = parseRequestedLocation(latestUserMessage);
   const requestedCount = parseRequestedCount(latestUserMessage);
 
   const searchData = allUniversitiesData || getUniversitiesData();
@@ -937,6 +1006,9 @@ export function buildAdvisorSummary(
   const mentionedUniversities = findMentionedInCustom(latestUserMessage);
   const mentionedUniversity =
     mentionedUniversities.length === 1 ? mentionedUniversities[0] : undefined;
+  if (mentionedUniversities.length > 0 && requestedLocation && !hasExplicitLocationCue(latestUserMessage)) {
+    requestedLocation = undefined;
+  }
   const requestLines = latestUserMessage
     .split(/\r?\n/)
     .map((line) => line.trim())
